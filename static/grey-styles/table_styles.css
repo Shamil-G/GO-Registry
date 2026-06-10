@@ -1,0 +1,97 @@
+.title, .title2 {
+    padding: 6px 12px;
+}
+.title{
+    font-size: 20px;
+}
+.title2 {
+    font-size: 16px;
+}
+/* Форма ABOUT*/
+.table_s {
+    margin: 12px;
+}
+.th_s, .td_s, .td_s2 {
+    text-align: center;
+    text-decoration: none;
+    padding: 3px 12px;
+    font-weight: normal;
+    border: 1px solid rgba(180, 180, 180, 0.3);
+}
+/* Подсвечиваем строки на котором стоит курсор*/
+.tr_s:hover {
+    border: 1px solid rgba(180, 180, 180, 0.3);
+    background: #555;
+}
+/* Если отчет выбирали то установим новый цвет */
+.a_s {
+    color: #ddd;
+    text-decoration: none;
+}
+.a_s:visited {
+    color: #ddd;
+    text-decoration: none;
+}
+.a_s:link {
+    color: #ddd;
+    text-decoration: none;
+}
+.a_s2 {
+    color:moccasin;
+    text-decoration: none;
+}
+.a_s2:hover {
+    color:palevioletred;
+}
+
+/*
+.a_s2:visited {
+    color: blanchedalmond;
+    text-decoration: none;
+}
+*/*, *:after, *:before {
+    box-sizing: border-box;
+}
+
+div.field {
+    display: flex;
+    vertical-align: bottom;
+    align-items: center;
+    align-content: center;
+}
+
+div.field label {
+    height: 24px;
+    width: 195px;
+}
+.table_about, .table_common {
+    margin: 12px;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.table_common th, .table_common tbody tr, .table_common tbody td {
+    padding: 3px 12px;
+    text-align: center;
+    border-radius: 5px;
+    border: 1px solid #ffe4b57a;
+}
+/* Подсвечиваем строки на котором стоит курсор*/
+.table_common tbody tr:hover {
+    background-color: rgba(239, 220, 112, 0.15);
+}
+/* Подкрашиваем кнопку Новый расчет и линки на отчеты*/
+.table_common {
+    text-decoration: none;
+}
+
+.table_common a[name='sum_column'] {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+.table_common > a {
+    background: #777;
+    color: wheat;
+    text-decoration: none;
+    border-radius: 4px;
+}

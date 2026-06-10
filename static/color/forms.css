@@ -1,0 +1,27 @@
+.input_s {
+    color: #444;
+    background-color: #efefd3a8;
+    border: 1px solid rgba(180, 180, 180, 0.3);
+    box-shadow: 6px 6px 8px rgba(70, 205, 79, 0.2);
+}
+
+.input_s:hover {
+    /*color: bisque;*/
+    align-items: center;
+    box-shadow: 2px 2px 5px darkseagreen;
+}
+/*Сообщение в новостную ленту*/
+textarea {
+    color: #444;
+    background: #deefdf;
+    border: 1px solid #ffe4b57a;
+    box-shadow: 2px 2px 5px darkseagreen;
+    border: 2px solid rgba(180, 180, 180, 0.3);
+}
+
+select {
+    color: #ccc;
+    background: #444;
+    border: 1px solid #ffe4b57a;
+}
+

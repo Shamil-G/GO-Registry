@@ -1,0 +1,16 @@
+﻿.img-style {
+    box-shadow: 5px 5px 8px rgba(70, 205, 79, 0.4);
+    transition: color .2s ease-in-out,background-color .2s ease-in-out, border-color .2s ease-in-out, box-shadow .2s ease-in-out;
+}
+.img-style:hover {
+    box-shadow: 5px -5px 8px rgba(70, 205, 79, 0.4);
+}
+.ok, .cancel {
+    border: 1px solid rgba(180, 180, 180, 0.3);
+    transition: color .2s ease-in-out,background-color .2s ease-in-out, border-color .2s ease-in-out, box-shadow .2s ease-in-out;
+    box-shadow: 5px 5px 8px rgba(70, 205, 79, 0.3);
+}
+.ok:hover, .cancel:hover {
+    transition: color .2s ease-in-out,background-color .2s ease-in-out, border-color .2s ease-in-out, box-shadow .2s ease-in-out;
+    box-shadow: 5px -5px 8px rgba(70, 205, 79, 0.4);
+}

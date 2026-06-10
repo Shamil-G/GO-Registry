@@ -1,0 +1,78 @@
+{{ define "title" }}{{ res_value "SECURE_TIME_OFF" }}{{ end }}
+
+{{ define "main_title" }}
+    {{ res_value "SECURE_TIME_OFF" }}
+    {{ if .Message }}&nbsp;&emsp;{{ .Message }}{{ end }}
+{{ end }}
+
+{{ define "navigate" }}{{ end }}
+{{ define "info" }}{{ end }}
+
+{{ define "body" }}
+<form method="POST">
+    <div class="field">
+        <label for="employee">{{ res_value "EMPLOYEE" }}</label>
+        <input class="input_s" style="width: 480px" type="text" id="employee" name="employee" maxlength="128" autocomplete="on">
+    </div>
+    <div class="field">
+        <label for="dep_name">{{ res_value "DEP_NAME" }}</label>
+        <input class="input_s" style="width: 480px" type="text" id="dep_name" name="dep_name" maxlength="128" autocomplete="off">
+    </div>
+    <div class="field">
+        <label for="post">{{ res_value "POST" }}</label>
+        <input class="input_s" style="width: 480px" type="text" id="post" name="post" maxlength="128" autocomplete="on">
+    </div>
+    <div class="field">
+        <label for="date_out">{{ res_value "TIME_OUT" }}</label>
+        <input class="input_s" style="width: 220px" type="datetime-local" id="date_out" name="date_out">
+    </div>
+    <div class="field">
+        <label for="date_in">{{ res_value "TIME_IN" }}</label>
+        <input class="input_s" style="width: 220px" type="datetime-local" id="date_in" name="date_in">
+    </div>
+    <div class="field">
+        <label for="cause">{{ res_value "CAUSE" }}</label>
+        <input class="input_s" style="width: 66%" type="text" id="cause" name="cause" maxlength="512" minlength="12" autocomplete="off">
+    </div>
+    <br />
+    <button class="bt bt_r" type="submit" name="edit_parms">{{ res_value "SAVE" }}</button>
+    <br />
+</form>
+
+<br><br>
+<hr style="border: 0; border-top: 1px solid #ccc; margin: 18px 0;">
+<br>
+
+<table>
+    <colgroup>
+        <col><col><col><col><col><col><col><col>
+    </colgroup>
+    <thead>
+        <tr>
+            <th><a>{{ res_value "REG_DATE" }}</a></th>
+            <th><a>{{ res_value "TIME_OUT" }}</a></th>
+            <th><a>{{ res_value "TIME_IN" }}</a></th>
+            <th><a>{{ res_value "EMPLOYEE" }}</a></th>
+            <th><a>{{ res_value "POST" }}</a></th>
+            <th><a>{{ res_value "DEP_NAME" }}</a></th>
+            <th><a>{{ res_value "CAUSE" }}</a></th>
+            <th><a>{{ res_value "AGREE_HEAD" }}</a></th>
+        </tr>
+    </thead>
+    <tfoot></tfoot>
+    <tbody>
+        {{ range .ListTimeOff }}
+        <tr>
+            <td style="text-align: center"><a>{{ .EventDate }}</a></td>
+            <td style="text-align: center"><a>{{ .TimeOut }}</a></td>
+            <td style="text-align: center"><a>{{ .TimeIn }}</a></td>
+            <td><a>{{ .Employee }}</a></td>
+            <td><a>{{ .Post }}</a></td>
+            <td><a>{{ .DepName }}</a></td>
+            <td><a>{{ .Cause }}</a></td>
+            <td><a>{{ .Head }}</a></td>
+        </tr>
+        {{ end }}
+    </tbody>
+</table>
+{{ end }}

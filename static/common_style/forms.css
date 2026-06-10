@@ -1,0 +1,44 @@
+form {
+    margin: 1px 1px;
+    padding: 24px 15px 0px 24px;
+    text-shadow: none;
+}
+div.field {
+    margin-top: 5px;
+    display: flex;
+    vertical-align: bottom;
+    align-items: center;
+    align-content: center;
+}
+
+div.field label {
+    height: 24px;
+    width: 240px;
+    font-size: 17px;
+}
+.input_s {
+    margin-left: 12px;
+    padding: 9px;
+    font-size: 18px;
+    align-items: center;
+    border-radius: 5px;
+    width: 260px;
+}
+/*Сообщение в новостную ленту*/
+textarea {
+    margin-top: 5px;
+    font-family: cursive, sans-serif;
+    outline: 0;
+    padding: 5px;
+    border-radius: 5px;
+    width: 540px;
+}
+select {
+    padding: 5px;
+    margin-top: 5px;
+    font-family: cursive, sans-serif;
+    outline: 0;
+    width: 540px;
+    border-radius: 5px;
+}
+

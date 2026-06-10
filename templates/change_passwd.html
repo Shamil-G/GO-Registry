@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ res_value('CHANGING_PASSWORD') }}
+{% endblock %}
+
+{% block main_title %}
+<a class="title">{{ res_value('CHANGING_PASSWORD') }}</a>
+{% endblock %}
+
+{% block navigate %}
+    <a href="/">{{ res_value('RETURN') }}</a>
+{% endblock %}
+
+{% block body %}
+<div class="title_message">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul class="flashes">
+        {% for msg in messages %}
+        <li>{{ msg }} </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+</div>
+<form class="form_r" method="POST">
+    <table>
+        <tr>
+            <td><a>{{ res_value('NEW_PASSWORD') }}&emsp;</a></td>
+            <td><input class="input_s" type="password" name="password_1"></td>
+        </tr>
+        <tr>
+            <td><a>{{ res_value('REPEATE_PASSWORD') }}&emsp;</a></td>
+            <td><input class="input_s" type="password" name="password_2"></td>
+        </tr>
+    </table>
+    <br />
+    <button class="bt_s" type="submit">{{ res_value('CHANGE_PASSWORD') }}</button>
+</form>
+{% endblock %}

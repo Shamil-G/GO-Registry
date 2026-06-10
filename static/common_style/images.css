@@ -1,0 +1,28 @@
+﻿.img-logo {
+    width: 24px;
+    height: 24px;
+}
+.img-style {
+    border-radius: 18px;
+    margin: 2px 2px;
+    vertical-align: middle;
+}
+.img-style:hover {
+    transition: color .2s ease-in-out,background-color .2s ease-in-out, border-color .2s ease-in-out, box-shadow .2s ease-in-out;
+    box-shadow: 5px -5px 8px rgba(70, 205, 79, 0.4);
+}
+.ok, .cancel {
+    width: 40px;
+    height: 36px;
+    border-radius: 32px;
+    margin: 0px 6px;
+    vertical-align: middle;
+    border-radius: 5px;
+}
+.ok {
+    padding: 3px 4px 3px 4px;
+}
+.cancel {
+    padding: 0px 1px 1px 0px;
+}
+

@@ -1,0 +1,37 @@
+{{ define "title" }}{{ res_value "LOGIN_PAGE" }}{{ end }}
+
+{{ define "main_title" }} {{ res_value "LOGIN_PAGE" }} {{ end }}
+
+<!-- Пустая заглушка для навигации -->
+{{ define "navigate" }}{{ end }}
+
+{{ define "body" }}
+<!-- Верхний блок теперь чистый, без всплывающей ошибки -->
+<div class="title_message"></div>
+
+<form class="form_body" method="POST" action="/login">
+    <div>
+        <input class="input_s" style="margin-left:0px" type="text" name="username" placeholder="{{ res_value "LOGIN_NAME" }}" autocomplete="off">
+    </div>
+    <div style="margin-top: 9px">
+        <input class="input_s" style="margin-left:0px" type="password" name="password" placeholder="{{ res_value "INSERT_PASSWORD" }}" autocomplete="new-password">
+    </div>
+    
+    <button style="margin-top:16px" type="submit">{{ res_value "LOGIN" }}</button>
+    
+    <!-- !!! ПЕРЕНЕСЛИ БЛОК ОШИБКИ СЮДА — ПОД КНОПКУ РЕГИСТРАЦИИ !!! -->
+    {{ if .Error }}
+    <div class="title_message" style="margin-top: 16px; text-align: center;">
+        <ul class="flashes" style="margin: 0; padding: 0; list-style: none;">
+            <li class="td_value_bold" style="color: #222222; font-size: 19px; font-weight: bold;"> {{ .Error }} </li>
+        </ul>
+    </div>
+    {{ end }}
+    
+    <div style="text-align: left; margin-top: 24px">
+        {{ if .Info }}
+        <a style="font-size: 19px; font-weight: bold;">{{ .Info }}</a>
+        {{ end }}
+    </div>
+</form>
+{{ end }}

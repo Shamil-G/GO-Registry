@@ -1,0 +1,18 @@
+{{ define "title" }}{{ res_value "NEW_MESSAGE" }}{{ end }}
+
+{{ define "main_title" }}{{ res_value "NEW_MESSAGE" }}{{ end }}
+
+{{ define "navigate" }}{{ end }}
+{{ define "info" }}{{ end }}
+
+{{ define "body" }}
+<form method="POST">
+    <div>
+        <a style="font-size: 20px; font-weight: 500">{{ res_value "ADD_MESSAGE" }}</a>
+    </div>
+    <div>
+        <textarea style="margin-top: 12px" class="textarea" name="new_message" rows="10" cols="80"></textarea>
+    </div>
+    <div style="margin-top: 16px"><button type="submit">{{ res_value "SAVE" }}</button></div>
+</form>
+{{ end }}

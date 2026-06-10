@@ -1,0 +1,66 @@
+{{ define "title" }}{{ res_value "LIST_NPA" }}{{ end }}
+
+{{ define "main_title" }} {{ res_value "LIST_NPA" }} {{ end }}
+
+<!-- Пустая заглушка для навигации -->
+{{ define "navigate" }}{{ end }}
+
+{{ define "body" }}
+<form>
+    <!-- Переводим цикл со стиля Flask (Jinja2) на чистый Go html/template -->
+    {{ range .ListNpa }}
+    <div>
+        <a class="track-click"
+           data-path="{{ .Path }}"
+           data-num="{{ .Num }}"
+           data-name="{{ .Name }}"
+           style="display: block; text-align: left; font-size: 19px; margin-bottom: 12px"
+           href="{{ .Path }}">{{ .Num }}.&nbsp;{{ .Name }}</a>
+    </div>
+    {{ end }}
+</form>
+
+{{ if .IsBoss }}
+<hr>
+<div style="border-radius: 5px; border-bottom: 1px solid rgba(142, 142, 142, 0.3);">
+    <form action="/uploads-use-npa" method="POST" style="margin: 12px 2px 2px 2px; padding: 0px 16px">
+        <label style="font-size: 19px;" for="flt_year">{{ res_value "PRINT_YEAR" }}:&nbsp;</label>
+        
+        <!-- Используем .CurrentYear из переданной структуры бэкенда -->
+        <input class="input_s" style="width: 80px;" 
+               type="number" min="2025" max="{{ .CurrentYear }}" step="1" maxlength="4"
+               value="{{ .CurrentYear }}" name="flt_year" id="flt_year" required>
+               
+        <button type="submit" class="button" style="margin-left:12px;">
+            {{ res_value "PRINT_EXECUTE" }}
+        </button>
+    </form>
+</div>
+{{ end }}
+
+<script>
+    // Безопасно передаем строковые переменные из Go структуры контекста
+    const userId = "{{ .FIO }}";  
+    const depName = "{{ .DepName }}";  
+
+    document.querySelectorAll('.track-click').forEach(link => {
+        link.addEventListener('click', function (e) {
+            // Отправляем аналитику клика на бэкенд Go
+            fetch('/log-click', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_name: userId,
+                    dep_name: depName,
+                    path: this.dataset.path,
+                    num: parseInt(this.dataset.num, 10), // приводим к числу для строгого Go JSON
+                    name: this.dataset.name,
+                    timestamp: new Date().toISOString()
+                })
+            });
+        });
+    });
+</script>
+{{ end }}

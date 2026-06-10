@@ -1,0 +1,125 @@
+* { border: 1px dotted black; }
+
+/* Все входы ul в container*/
+/*
+.container  ul {
+ color: red;
+}
+*/
+/* Прямое наследование ul в container*/
+/*
+.container  > ul {
+ color: red;
+}
+*/
+/* Выбирает все элементы Р который идут сразу после ul*/
+ul ~ p {
+ color: blue;
+}
+/* Выбирает первый элемент Р который идет сразу после ul*/
+ul + p {
+ color: red;
+}
+/*Прямой потомок: P внутри UL*/
+ul > p {
+ color: green;
+}
+/* Должен быть атрибут NAME */
+a[name]{
+ color: green;
+ font-weight: bold;
+}
+/* Должен быть атрибут NAME="username" */
+input[name="username"]{
+ color: green;
+ font-weight: bold;
+}
+/* Должен быть атрибут NAME="password", слово "password" должно как-то входить в значение атрибута name */
+input[name*="password"]{
+ color: green;
+ font-weight: bold;
+}
+/* Должен быть атрибут href^="http", значение атрибута href должно начинаться со слова "http" */
+a[name^="http"]{
+ color: green;
+ font-weight: bold;
+}
+/* Должен быть атрибут href значение значение которого заканчивается на ".jpg" */
+a[name$=".jpg"]{
+ color: green;
+ font-weight: bold;
+}
+/*Все картинки*/
+a[href$=".jpg"],
+a[href$=".jpeg"],
+a[href$=".png"],
+a[href$=".gif"] {
+ color: red;
+}
+/* ~ Можно выбрать атрибут в котором значения разделены пробелом */
+a[data-info~="external"] {
+ color: red;
+}
+a[data-info~="image"] {
+ border: 1px solid black;
+}
+<a href="path/to/image.jpg" data-info="external image"> Нажми на меня, дурашка </a>
+
+/* Выбираем только отмеченные кнопки*/
+input[type=radio]:checked {
+ border: 1px solid black;
+}
+/*  Выбираем все теги div в которых id не равен container*/
+div:not(#container) {
+ color: blue;
+}
+/* Найдет первую букву в параграфе и сделает её большой*/
+p::first-letter {
+ float: left;
+ font-size: 1.5em;
+ font-weight: bold;
+ font-family: cursive;
+ padding-right: 2px;
+}
+/* Выберем первую строку в параграфе*/
+p::first-line {
+ font-weight: bold;
+ font-size: 1.2em;
+}
+/* Выбираем каждый второй элемент списка */
+li:nth-child(2) {
+ color: brown;
+}
+/* Выбираем второй? элемент с конца*/
+li:nth-last-child(2) {
+ color: red;
+}
+/* Выбираем на странце третий список натравливая на него псевдокласс nth-of-type */
+ul:nth-of-type(3) {
+ border: 1px solid black;
+}
+/* Выбираем на странце третий список с конца натравливая на него псевдокласс nth-of-type */
+ul:nth-last-of-type(3) {
+ border: 1px solid black;
+}
+/* Выбираем первый дочерний элемент */
+ul li:first-child {
+ border-top: none;
+}
+/* Выбираем последний дочерний элемент */
+ul li:last-child {
+ border-top: none;
+}
+/* выбираем элемент у которого только один наследник/потомок */
+div p:only-child {
+ color: red;
+}
+/* выбираем такой дочерний элемент, если он единственный у родителя */
+li:only-of-type {
+ font-weight: bold;
+}
+/* Выбираем первого наследника указанного типа*/
+/* Выбираем Первый список, далее в нем находим последний элемент */
+ul:first-of-type li:nth-last-child(1) {
+ font-weight: bold;   
+}

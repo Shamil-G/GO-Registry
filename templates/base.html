@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="{{ .Lang }}">
+<head class="intro-header">
+    <link id="theme-stylesheet" rel="stylesheet" type="text/css" href="/static/{{ .Theme }}/include.css">
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{{ template "title" . }}</title>
+    
+    <!-- !!! ИСПРАВЛЕНИЕ: Перенесли подключение скриптов наверх, чтобы избежать ошибок инициализации функций !!! -->
+    <!-- <script src="/static/js/theme.js"></script> -->
+</head>
+
+<body data-theme="{{.Theme}}" data-lang="{{.Lang}}">
+<common-container>
+
+    <header>
+        <header-l>
+            <img src="/static/img/logo-g.ico" class="img-logo">
+            &emsp;
+            <a style="font-size: 20px">{{ res_value "APP_NAME" }}</a>
+        </header-l>
+
+        <header-c></header-c>
+
+        <header-r>
+            {{ if eq .Theme "dark" }}
+            <div>
+                <a href="/theme/color">
+                    <img class="img-style" src="/static/img/icons8-color-48.png" style="width: 24px; height: 24px" />
+                </a>
+            </div>
+            {{ else }}
+            <div>
+                <a href="/theme/dark">
+                    <img class="img-style" src="/static/img/icons8-black-white-50.png" style="width: 24px; height: 24px" />
+                </a>
+            </div>
+            {{ end }}
+
+            {{ if eq .Lang "ru" }}
+            <a class="nav_button lang-toggle-btn" style="margin-left: 16px; padding: 6px 24px; cursor: pointer;" 
+               href="/language/kz" data-lang="kz" data-anonymous="{{ .IsAnonymous }}">ҚАЗ</a>
+            {{ else }}
+            <a class="nav_button lang-toggle-btn" style="margin-left: 16px; padding: 6px 24px; cursor: pointer;" 
+               href="/language/ru" data-lang="ru" data-anonymous="{{ .IsAnonymous }}">РУС</a>
+            {{ end }}
+
+            {{ if .IsAnonymous }}
+            <a class="nav_button" style="margin-left: 16px; padding: 6px 24px" href="/login">{{ res_value "LOGIN" }}</a>
+            {{ else }}
+            <a class="nav_button" style="margin-left: 16px; padding: 6px 24px" href="/logout">{{ res_value "LOGOUT" }}</a>
+            {{ end }}
+        </header-r>
+    </header>
+
+    <nav>
+        <!-- !!! ИСПРАВИЛИ: Теперь блок sidebar_menu полностью контролирует всё содержимое меню !!! -->
+        {{ block "sidebar_menu" . }}
+            <!-- Если внутренняя страница не переопределила этот блок, выведется только ОДНА эта кнопка -->
+            <a class="nav_button" href="/">← {{ res_value "MAIN_MENU" }}</a>
+        {{ end }}
+    </nav>
+
+    <article_title>
+        {{ template "main_title" . }}
+    </article_title>
+
+    <article>
+        <article_body>
+            <div>
+                {{ template "body" . }}
+            </div>
+        </article_body>
+
+        <article_info>
+            {{ if .AllMessages }}
+            <div class="news-container">
+                <table>
+                    <thead class="news-head">
+                    <tr>
+                        <th>
+                            <a style="font-size: 16px;">{{ res_value "INFORMATION" }}</a>
+                        </th>
+                    </tr>
+                    </thead>
+
+                    <tbody class="news-tbody">
+                    <tr>
+                        <td>
+                            {{ range .AllMessages }}
+                            <a style="margin-left:2px; font-size: 12px; font-weight:300">{{ .Date }}</a>&nbsp;
+                            <a style="font-weight:600">{{ .Author }}</a>
+                            <br>
+
+                            {{ if .DepName }}
+                            <a style="margin-left: 2px; font-size: 14px; font-weight: 300; font-style: italic">{{ .DepName }}</a>
+                            <br>
+                            {{ end }}
+
+                            <a style="margin-left: 2px; font-weight: 500;">{{ .Message }}</a>
+                            <br><br>
+                            {{ end }}
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            {{ block "info" . }}{{ end }}
+            {{ end }}
+        </article_info>
+    </article>
+
+    <footer>
+        <footer-l>
+            <img src="/static/img/logo-g.ico" style="width: 24px; height: 24px">
+            <small>&emsp;©2024</small>
+        </footer-l>
+
+        <footer-r>
+            <small style="visibility: hidden">{{ res_value "CREATORS" }}</small>
+            <small style="visibility: hidden">{{ res_value "FOR_DEVELOPERS" }}</small>
+
+            {{ if not .IsAnonymous }}
+            <a style="font-size:14px">#{{ .FIO }} : {{ .Post }} : {{ .DepName }}</a>
+            {{ end }}
+        </footer-r>
+    </footer>
+
+</common-container>
+</body>
+</html>

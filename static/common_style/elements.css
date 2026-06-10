@@ -1,0 +1,22 @@
+﻿.cancel_background_hover:hover {
+    background: inherit;
+}
+
+a[href^='/language'], header a[href^='/log'] {
+    /*color: black;*/
+    margin-left: 10px;
+    padding: 5px;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+a {
+    font-weight: normal;
+    text-decoration: none;
+}
+
+.title {
+    padding: 6px 12px;
+    font-size: 20px;
+}
+

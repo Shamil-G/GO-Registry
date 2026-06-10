@@ -1,0 +1,103 @@
+﻿:root {
+    text-decoration: none;
+    text-shadow: 1px 2px 3px grey;
+}
+html, body {
+    margin: 0px;
+    padding: 1px;
+    height: 100%;
+    width: 100%;
+    font-family: Calibri;
+}
+common-container {
+    min-height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 7fr;
+    grid-template-rows: 44px 44px auto 36px;
+    grid-gap: 1px;
+    grid-template-areas: "header header"
+        "nav article_title"
+        "nav article"
+        "footer footer";
+}
+nav {
+    margin: 0px;
+    padding: 1px;
+    display: grid;
+    grid-template-rows: repeat(12,minmax(32px, 64px));
+    grid-row-gap: 1px;
+    grid-area: nav; /* задаем имя элемента */
+    align-content: stretch;
+    background-size: cover;
+    background-position: center;
+}
+header {
+    display: grid;
+    padding-left: 16px;
+    grid-template-columns: 4fr 4fr 4fr;
+    align-items: center; /* Выравниваем по вертикали*/
+    grid-area: header; /* задаем имя элемента */
+    background-size: cover;
+    background-position: center;
+}
+article {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-area: article; /* задаем имя элемента */
+    grid-template-areas: "article_body article_info";
+    border-radius: 5px;
+    border: 1px solid rgba(180, 180, 180, 0.3);
+}
+article_title {
+    padding: 2px 24px;
+    font-size: 20px;
+    display: flex; /*Для выравнивания заголовка по центру*/
+    align-items: center; /*Для выравнивания заголовка по центру*/
+    grid-area: article_title; /* задаем имя элемента */
+}
+article_body {
+    margin: 0;
+    grid-area: article_body; /* задаем имя элемента */
+    min-height: 100%;
+    display: grid;
+}
+article_info {
+    padding: 0px 1px 0px 1px;
+    grid-area: article_info; /* задаем имя элемента */
+    min-height: 100%;
+    display: grid;
+}
+footer {
+    display: grid;
+    padding: 8px 16px;
+    align-items: center; /* Выравниваем по вертикали*/
+    grid-template-columns: 1fr 6fr;
+    grid-area: footer; /* задаем имя элемента */
+    background-size: cover;
+    background-position: center;
+}
+header, nav, article_title, article_body, article_info, footer {
+    border-radius: 3px;
+}
+article_title, footer {
+    padding-left: 8px;
+    align-items: center;
+}
+footer > footer-l, header > header-l {
+    margin-left: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+footer > footer-r, header > header-r {
+    margin-right: 10px;
+    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+nav > a {
+    font-size: 18px;
+}
