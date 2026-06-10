@@ -1,0 +1,45 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.bin
+*.xlsx
+
+# Go build output
+/build/
+dist/
+bin/
+
+# Go workspace files
+go.work
+go.work.sum
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+
+# Local environment files
+.env
+.env.local
+.env.*
+!.env.example
+
+# Temporary files
+*.tmp
+*.temp
+
+# Coverage
+coverage.out
+
