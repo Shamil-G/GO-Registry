@@ -16,6 +16,7 @@ registry.exe
 dist/
 bin/
 reports/
+logs/
 
 # Go workspace files
 go.work
