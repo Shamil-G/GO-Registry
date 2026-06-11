@@ -17,11 +17,6 @@ func AllListReport() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Проверяем авторизацию через мидлварь
 		ssoUser := middleware.GetOrCreatePageCtx(r.Context())
-		if ssoUser.IsAnonymous {
-			slog.Error("Пользователь отсутствует в контексте при запросе Excel отчета")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
 
 		// 2. Извлекаем месяц фильтрации из URL параметров (?flt_month=2026-06)
 		fltMonth := r.URL.Query().Get("flt_month")

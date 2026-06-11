@@ -63,11 +63,6 @@ func ListNPA() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Извлекаем уже готовый и посчитанный контекст из нашей мидлвари Authorize
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		if pageCtx.IsAnonymous {
-			slog.Error("Анонимная попытка согласования заявки")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
 
 		// 1. 🚀 Интегрируем список законов из сервиса
 		npaList := service.GetStaticNpaList()
@@ -153,11 +148,6 @@ func UploadsUseNpa() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Проверяем авторизацию шефа (на всякий случай, хотя мидлварь защищает роут)
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		if pageCtx.IsAnonymous {
-			slog.Error("Анонимная попытка генерации отчета НПА")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
 
 		// Дополнительный щит: только боссы или админы могут дергать этот отчет
 		if !pageCtx.IsBoss {

@@ -52,12 +52,6 @@ func TimeOffGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Извлекаем готовый пакет данных из нашей объединенной мидлвари Authorize
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		if pageCtx.IsAnonymous {
-
-			slog.Error("Пользователь отсутствует в контексте защищенного маршрута")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
 
 		// 2. ВЫЗЫВАЕМ ОРИГИНАЛЬНЫЙ SELECT ЗАПРОС К ORACLE
 		query := `SELECT 
@@ -155,11 +149,11 @@ func TimeOffPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Извлекаем готовый пакет данных из нашей мидлвари Authorize
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		if pageCtx.IsAnonymous {
-			slog.Error("Пользователь отсутствует в контексте при отправке формы time-off")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
+		// if pageCtx.IsAnonymous {
+		// 	slog.Error("Пользователь отсутствует в контексте при отправке формы time-off")
+		// 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+		// 	return
+		// }
 
 		// Читаем данные из формы
 		dateOut := r.FormValue("date_out")

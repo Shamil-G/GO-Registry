@@ -32,11 +32,6 @@ func ListAbsent() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Достаем готовый пакет данных из нашей объединенной мидлвари
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		if pageCtx.IsAnonymous {
-			slog.Error("Пользователь отсутствует в контексте защищенного маршрута")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
 
 		var query string
 		var queryArgs []any

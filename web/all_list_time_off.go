@@ -26,11 +26,6 @@ func AllListTimeOff() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Извлекаем готовый пакет данных из мидлвари
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		if pageCtx.IsAnonymous {
-			slog.Error("Пользователь отсутствует в контексте защищенного маршрута общего списка")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
 
 		// 2. Определяем выбранный месяц (GET - текущий, POST - из формы)
 		selectedMonth := time.Now().Format("2006-01")

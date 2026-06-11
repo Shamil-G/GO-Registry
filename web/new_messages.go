@@ -28,11 +28,7 @@ func NewMessageGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Извлекаем уже готовый и посчитанный контекст из нашей мидлвари Authorize
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		if pageCtx.IsAnonymous {
-			slog.Error("Анонимная попытка согласования заявки")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
+
 		data := ViewTimeOff{
 			BasePageContext: pageCtx,
 			Message:         "",
@@ -71,11 +67,6 @@ func NewMessageGet() http.HandlerFunc {
 func NewMessagePost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		if pageCtx.IsAnonymous {
-			slog.Error("Пользователь отсутствует в контексте при отправке формы secure-time-off")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
 
 		newMessage := r.FormValue("new_message")
 		query := `begin reg.new_message(:employee, :dep_name, :message); end;`

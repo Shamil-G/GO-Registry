@@ -22,11 +22,6 @@ func SecureTimeOffGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Извлекаем готовый пакет данных из нашей объединенной мидлвари Authorize
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		if pageCtx.IsAnonymous {
-			slog.Error("Пользователь отсутствует в контексте защищенного маршрута")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
 
 		// 2. ВЫЗЫВАЕМ SELECT ЗАПРОС К ORACLE ЧЕРЕЗ SQLX (Без login_name)
 		query := `select 

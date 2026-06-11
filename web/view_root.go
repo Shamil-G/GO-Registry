@@ -62,7 +62,7 @@ func ViewRootGet() http.HandlerFunc {
 			slog.Error("[ROOT] Ошибка получения списка именинников", "err", err, "duration", time.Since(startSSO))
 			birthdays = []ssoPkg.BirthdayUser{} // Защита от nil
 		} else {
-			slog.Debug("[ROOT] Именинники успешно получены", "duration", time.Since(startSSO))
+			// slog.Debug("[ROOT] Именинники успешно получены", "duration", time.Since(startSSO))
 		}
 
 		// 1. Извлекаем готовый контекст, собранный нашей мидлварью Authorize.
@@ -77,8 +77,7 @@ func ViewRootGet() http.HandlerFunc {
 			isAdmin := config.IsSuperAdmin(pageCtx.FIO)
 			hasSubordinates := len(pageCtx.SubordinateOU) > 0
 
-			slog.Debug("[ROOT]", "IsBoss", pageCtx.IsBoss, "IsAdmin", isAdmin, "HasSubordinates",
-				hasSubordinates, "Post", pageCtx.Post, "LoginName", pageCtx.LoginName, "FIO", pageCtx.FIO)
+			slog.Debug("[ROOT]", "LoginName", pageCtx.LoginName, "FIO", pageCtx.FIO)
 
 			// Заполняем поля структуры для авторизованного отображения
 			data = ViewData{
@@ -89,7 +88,6 @@ func ViewRootGet() http.HandlerFunc {
 				HasSubordinates: hasSubordinates,
 				PhoneBook:       config.PhoneBook,
 			}
-			slog.Debug("[ROOT] CHECK THEME & LANG", "THEME", data.Theme, "LANG", data.Lang)
 		} else {
 			anonCtx := &middleware.BasePageContext{
 				IsAnonymous: true,
@@ -101,7 +99,6 @@ func ViewRootGet() http.HandlerFunc {
 				ListBD:          birthdays,
 				AllMessages:     messages,
 			}
-			slog.Debug("[ROOT] Главная страница. АНОНИМНЫЙ пользователь", "THEME", pageCtx.Theme, "LANG", pageCtx.Lang)
 		}
 
 		// 5. Компиляция комплекта шаблонов с динамической привязкой i18n

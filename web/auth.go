@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"gusseynov/GO-Registry/config"
 	"gusseynov/GO-Registry/middleware"
 	"gusseynov/GO-Registry/service/i18n"
 	ssoPkg "gusseynov/GO-Registry/sso"
@@ -17,8 +18,8 @@ func renderLoginForm(w http.ResponseWriter, r *http.Request, errorMsg string) {
 	// lang := "ru"
 	pageCtx := middleware.GetOrCreatePageCtx(r.Context())
 
-	slog.Info("[LOGIN_FORM]", "LANG", pageCtx.Lang)
-	slog.Info("[LOGIN_FORM]", "THEME", pageCtx.Theme)
+	// slog.Info("[LOGIN_FORM]", "LANG", pageCtx.Lang)
+	// slog.Info("[LOGIN_FORM]", "THEME", pageCtx.Theme)
 
 	tmpl, err := template.New("base.html").Funcs(template.FuncMap{
 		"res_value": func(key string) string {
@@ -68,54 +69,46 @@ func LoginPost() http.HandlerFunc {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 
-		clientIP := middleware.GetClientIP(r)
-		slog.Info("Попытка авторизации", "user", username, "ip", clientIP)
+		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
 
 		// Вызываем метод sso.Client
-		ssoUser, err := ssoPkg.Client.Login(r.Context(), username, password, clientIP)
+		ssoUser, err := ssoPkg.Client.Login(r.Context(), username, password, pageCtx.IP)
 		if err != nil {
-			slog.Warn("SSO отклонил авторизацию", "user", username, "ip", clientIP, "err", err)
+			slog.Warn("SSO отклонил авторизацию", "user", username, "ip", pageCtx.IP, "err", err)
 
-			// 1. Получаем текущий язык из контекста (чтобы ошибка была на нужном языке)
-			lang, ok := r.Context().Value("lang").(string)
-			if !ok || lang == "" {
-				lang = "ru"
-			}
-
-			// 2. Достаем переведенный текст ошибки по ключу "AUTH_FAILED"
-			translatedError := i18n.Get(lang, "AUTH_FAILED")
+			// Достаем переведенный текст ошибки по ключу "AUTH_FAILED"
+			translatedError := i18n.Get(pageCtx.Lang, "AUTH_FAILED")
 
 			// 3. Рендерим форму обратно с правильным переводом
 			renderLoginForm(w, r, translatedError)
 			return
 		}
 
-		slog.Info("Успешная авторизация в SSO", "user", username, "ip", clientIP)
-		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		slog.Debug("[LOGIN_POST]", "GET COOKIE THEME & LANG. cookie_theme", pageCtx.Theme, "cookie_lang", pageCtx.Lang)
+		slog.Info("Успешная авторизация в SSO", "user", username, "ip", pageCtx.IP)
+		// slog.Debug("[LOGIN_POST]", "GET COOKIE THEME & LANG. cookie_theme", pageCtx.Theme, "cookie_lang", pageCtx.Lang)
 
 		// 1. Инициализируем значения дефолтами из SSO
-		userLang := ssoUser.Lang
-		slog.Info("[LOGIN_POST]", "GET userLang", userLang)
-		if userLang == "" {
-			userLang = pageCtx.Lang
-			if err := ssoPkg.Client.Set(r.Context(), clientIP, "lang", userLang); err != nil {
+		ssoLang := ssoUser.Lang
+		// slog.Debug("[LOGIN_POST]", "GET ssoLang", ssoLang)
+		if ssoLang == "" {
+			ssoLang = pageCtx.Lang
+			if err := ssoPkg.Client.Set(r.Context(), pageCtx.IP, "lang", ssoLang); err != nil {
 				slog.Warn("Не удалось сохранить язык в SSO при логине", "err", err)
 			}
 		}
-		userTheme := ssoUser.Theme
-		if userTheme == "" {
-			userTheme = pageCtx.Theme
-			if err := ssoPkg.Client.Set(r.Context(), clientIP, "theme", userTheme); err != nil {
+		ssoTheme := ssoUser.Theme
+		if ssoTheme == "" {
+			ssoTheme = pageCtx.Theme
+			if err := ssoPkg.Client.Set(r.Context(), pageCtx.IP, "theme", ssoTheme); err != nil {
 				slog.Warn("Не удалось сохранить тему в SSO при логине", "err", err)
 			}
 		}
-		slog.Info("[LOGIN_POST]", "GET userTheme", userTheme)
-		if userLang != pageCtx.Lang {
-			SetCookieLang(w, userLang)
+		// slog.Debug("[LOGIN_POST]", "GET ssoTheme", ssoTheme)
+		if ssoLang != pageCtx.Lang {
+			SetCookieLang(w, ssoLang)
 		}
-		if userTheme != pageCtx.Theme {
-			SetCookieTheme(w, userTheme)
+		if ssoTheme != pageCtx.Theme {
+			SetCookieTheme(w, ssoTheme)
 		}
 
 		// !!! КОНЕЦ ИНТЕГРАЦИИ !!!
@@ -134,6 +127,6 @@ func LogoutGet() http.HandlerFunc {
 			slog.Error("Ошибка закрытия сессии в SSO", "ip", clientIP, "err", err)
 		}
 
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, config.Cfg.LOGIN_PAGE, http.StatusSeeOther)
 	}
 }

@@ -21,13 +21,6 @@ type ViewApprove struct {
 	*middleware.BasePageContext // 💡 Встраиваем базовый контекст (подтянет UserName, DepName, Lang, Theme)
 	ListToApprove               []TimeOffItem
 	AllMessages                 []MessageItem
-	// Если в шаблоне list_approve.html используются старые названия,
-	// мы можем временно продублировать их для обратной совместимости:
-	Style    string
-	Lang     string
-	UserName string
-	UserPost string
-	UserDep  string
 }
 
 // ListToApproveGet отображает список активных заявок на утверждение (GET /list-to-approve)
@@ -36,11 +29,6 @@ func ListToApproveGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Достаем готовый пакет данных из нашей объединенной мидлвари
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		if pageCtx.IsAnonymous {
-			slog.Error("Пользователь отсутствует в контексте защищенного маршрута")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
 
 		// 2. Навешиваем щит безопасности, используя готовый флаг из мидлвари
 		if !pageCtx.IsBoss {
@@ -186,11 +174,6 @@ func RefuseTimeOffPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Контроль авторизации и прав руководителя через единый контекст
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		if pageCtx.IsAnonymous {
-			slog.Error("Анонимная попытка отклонения заявки")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
 
 		// Дополнительный щит: если это не босс и не админ, рубим запрос сразу
 		if !pageCtx.IsBoss {
@@ -232,11 +215,6 @@ func ApproveTimeOffPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Контроль авторизации и прав руководителя через единый контекст мидлвари Authorize
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
-		if pageCtx.IsAnonymous {
-			slog.Error("Анонимная попытка согласования заявки")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
 
 		// Дополнительный щит безопасности: если это не босс и не админ, рубим запрос сразу
 		if !pageCtx.IsBoss {
