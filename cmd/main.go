@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -17,6 +18,8 @@ import (
 	"gusseynov/GO-Registry/sso"
 	"gusseynov/GO-Registry/storage"
 )
+
+var IsProduction bool
 
 func initLogger() {
 	f, err := os.OpenFile("logs/registry.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -32,18 +35,24 @@ func initLogger() {
 }
 
 func main() {
-	logging.Init() // ← ВАЖНО: включаем slog + цвета + ротацию + error.log
+	IsProduction = true
+	runMode := "Production"
+	if runtime.GOOS == "windows" {
+		IsProduction = false
+		runMode = "Development"
+	}
+	logging.Init(IsProduction) // ← ВАЖНО: включаем slog + цвета + ротацию + error.log
 	// initLogger()
-	logging.Start("Registry started ...")
+	logging.Start("Registry started", "Mode", runMode)
 
 	// 1. Инициализируем твой глобальный конфиг из .env
-	if err := config.LoadConfig(); err != nil {
+	if err := config.LoadConfig(IsProduction); err != nil {
 		slog.Error("Критическая ошибка загрузки конфигурации", "Error", err)
 		os.Exit(1)
 	}
 	logging.Start("REGISTRY Config ./env loaded ...")
 	// 3. Динамически обновляем уровень логирования на тот, что пришел из ENV
-	logging.SetLevel(os.Getenv("LOG_LEVEL"))
+	logging.SetLevel(IsProduction)
 
 	startMetrics := time.Now()
 	metrics.Init()

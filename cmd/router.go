@@ -36,8 +36,7 @@ func Router() http.Handler {
 	// WEB UI (внутренний интерфейс)
 	// -----------------------------
 	r.Group(func(r chi.Router) {
-		r.Use(mdw.CookieThemeLang)
-		r.Use(mdw.Authorize)
+		r.Use(mdw.PageContext)
 		// Главная
 		// Без этого не сработает middleware и не будет получен контекст
 		// зарегистрированного пользователя

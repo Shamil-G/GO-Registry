@@ -3,8 +3,7 @@ package config
 import (
 	"log/slog"
 	"os"
-	"runtime"
-	"slices"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -13,12 +12,13 @@ var PhoneBook string
 
 // Config хранит все настройки нашего портала
 type Config struct {
-	IsProd         bool
-	LogLevel       string
-	ListenAddr     string
-	SSOServer      string
-	TrustedServers []string
-
+	IsProd     bool
+	LogLevel   string
+	ListenAddr string
+	SSOServer  string
+	// TrustedServers []string
+	LOGIN_PAGE  string
+	PUBLIC_PATH []string
 	// Oracle DB
 	DBServer             string
 	DBUser               string
@@ -43,16 +43,12 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
-func IsTrusted(ip string) bool {
-	return slices.Contains(Cfg.TrustedServers, ip)
-}
-
-func ChooseAddr() string {
+func ChooseAddr(IsProduction bool) string {
 	local_port := os.Getenv("DEVELOP_PORT")
 	remote_port := os.Getenv("PROD_PORT")
 	server_addr := getEnv("SERVER_ADDR", "192.168.1.34")
 
-	if runtime.GOOS == "windows" {
+	if !IsProduction {
 		slog.Info("Detected DEVELOP mode (Windows)")
 		return "127.0.0.1:" + local_port
 	}
@@ -61,33 +57,72 @@ func ChooseAddr() string {
 	return server_addr + ":" + remote_port
 }
 
+func LoadPublicPaths() {
+	raw := os.Getenv("PUBLIC_PATHS")
+	Cfg.PUBLIC_PATH = make([]string, 0) // важно!
+
+	if raw == "" {
+		return
+	}
+
+	parts := strings.Split(raw, ",")
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			Cfg.PUBLIC_PATH = append(Cfg.PUBLIC_PATH, p)
+		}
+	}
+}
+
+func IsPublicPath(path string) bool {
+	for _, p := range Cfg.PUBLIC_PATH {
+
+		// 1. Корневой путь "/" — только точное совпадение
+		if p == "/" {
+			if path == "/" {
+				return true
+			}
+			continue
+		}
+
+		// 2. Префиксные пути ("/static/", "/language/", "/theme/")
+		if strings.HasSuffix(p, "/") {
+			if strings.HasPrefix(path, p) {
+				return true
+			}
+			continue
+		}
+
+		// 3. Точное совпадение ("/login", "/bd")
+		if path == p {
+			return true
+		}
+	}
+	return false
+}
+
 // LoadConfig читает файл .env и возвращает заполненную структуру
-func LoadConfig() error {
+func LoadConfig(IsProduction bool) error {
 	// Загружаем переменные из файла .env в окружение процесса
 	// Если файла нет (например, на проде переменные заданы через Docker), godotenv не упадет
 	_ = godotenv.Load()
 
-	isProd := runtime.GOOS == "linux"
-
-	listenAddr := ChooseAddr()
+	listenAddr := ChooseAddr(IsProduction)
 
 	dbMaxConns := "4"
-	logLevel := "DEBUG"
 
-	if isProd {
+	if IsProduction {
 		dbMaxConns = getEnv("DB_MAX_CONNS", "8")
-		logLevel = "INFO"
 	}
 
 	// Извлекаем строку доверенных серверов и бьем её по запятой в массив
 	PhoneBook = os.Getenv("PHONE_BOOK")
 
 	Cfg = &Config{
-		IsProd:     isProd,
-		LogLevel:   logLevel,
+		IsProd:     IsProduction,
 		ListenAddr: listenAddr,
 		SSOServer:  getEnv("SSO_SERVER", "192.168.1.34:8025"),
-
+		LOGIN_PAGE: getEnv("LOGIN_PAGE", "/login"),
 		// Oracle
 		DBServer:      os.Getenv("DB_SERVER"),
 		DBUser:        os.Getenv("DB_USER"),
@@ -101,6 +136,7 @@ func LoadConfig() error {
 		// = 180  # Время в секундах, в течении которого может существоват сеанс
 		DBMaxLifeTimeSession: getEnv("DBMaxLifeTimeSession", "180"),
 	}
-
+	LoadPublicPaths()
+	slog.Info("[LoadConfig]", "PUBLIC_PATH", Cfg.PUBLIC_PATH)
 	return nil
 }

@@ -14,23 +14,31 @@ import (
 )
 
 // Authorize — единая middleware: извлекает IP, проверяет сессию в SSO и собирает контекст страниц
-func Authorize(next http.Handler) http.Handler {
+func PageContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		// 1. Проверяем исключения для статики и публичных страниц
-		if strings.HasPrefix(path, "/static/") || path == "/bd" {
-			slog.Debug("[AUTH]", "Пропуск публичного пути без проверки SSO, path", path)
+		if strings.HasPrefix(path, "/static/") {
+			slog.Debug("[PCTX]", "Пропуск публичного пути без проверки SSO, path", path)
 			next.ServeHTTP(w, r)
 			return
 		}
-
 		page := GetOrCreatePageCtx(r.Context())
-		slog.Debug("[AUTH]", "1. Проверка сессии, theme", page.Theme, "lang", page.Lang)
-
 		// 2. Извлекаем IP-адрес клиента оригинальным проверенным методом
 		page.IP = GetClientIP(r)
+		// Даже для Анонима надо выставить Theme & Lang
+		if cookie, err := r.Cookie("lang"); err == nil {
+			if cookie.Value == "kz" || cookie.Value == "ru" {
+				page.Lang = cookie.Value
+			}
+		}
+		if cookie, err := r.Cookie("theme"); err == nil {
+			if cookie.Value == "color" || cookie.Value == "dark" {
+				page.Theme = cookie.Value
+			}
+		}
 
-		slog.Debug("[AUTH]", "2. Проверка сессии, path", path, "ip", page.IP)
+		// slog.Debug("[PCTX]", "theme", page.Theme, "lang", page.Lang, "ip", page.IP, "path", path)
 
 		// 3. Вызываем метод нашего глобального sso.Client
 		ssoUser, err := sso.Client.CheckSession(r.Context(), page.IP)
@@ -38,12 +46,19 @@ func Authorize(next http.Handler) http.Handler {
 			page.IsAnonymous = true
 
 			ctx := SavePageCtx(r.Context(), page)
-			slog.Debug("[AUTH]", "ANONYN USER, UserKey", UserKey, "page", page)
-			next.ServeHTTP(w, r.WithContext(ctx))
+
+			if config.IsPublicPath(path) {
+				slog.Debug("[PCTX] Публичный путь, пропускаем без SSO", "path", path)
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+
+			slog.Error("[PCTX]", "Попытка анонимного входа на ", path, "c адреса", page.IP)
+			http.Redirect(w, r, config.Cfg.LOGIN_PAGE, http.StatusSeeOther)
 			return
 		}
 
-		slog.Debug("[AUTH]", "Сессия валидна, user", ssoUser.LoginName, "path", path, "theme", ssoUser.Theme, "LANG", ssoUser.Lang)
+		page.IsAnonymous = false
 
 		// 5. Расчет иерархии ролей руководителя по правилам пакета config
 		isAdmin := config.IsSuperAdmin(ssoUser.FIO)
@@ -53,7 +68,6 @@ func Authorize(next http.Handler) http.Handler {
 
 		// 6. Формируем единый базовый контекст для UI шаблонов
 		page.FIO = ssoUser.FIO
-		page.LoginName = ssoUser.FIO
 		page.Post = ssoUser.Post
 		page.DepName = ssoUser.DepName
 		page.IsAnonymous = false
@@ -66,7 +80,9 @@ func Authorize(next http.Handler) http.Handler {
 		// 7. Сохраняем и контекст страницы, и сам IP в context запроса (на случай, если IP нужен в логике)
 		ctx := SavePageCtx(r.Context(), page)
 
-		slog.Debug("[AUTH]", "REAL USER, UserKey", UserKey, "clientIP", page.IP, "NOW THEME", page.Theme, "NOW LANG", page.Lang)
+		slog.Info("[PCTX]", "REAL USER. LoginName", page.LoginName, "IP", page.IP, "FIO", page.FIO,
+			"THEME", page.Theme, "LANG", page.Lang, "IsBoss", page.IsBoss, "IsAdmin", isAdmin, "Post", page.Post,
+			"SUBORDINATE", page.SubordinateOU)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

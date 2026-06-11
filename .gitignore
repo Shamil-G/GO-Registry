@@ -8,11 +8,14 @@
 *.out
 *.bin
 *.xlsx
+*.log
+registry.exe
 
 # Go build output
 /build/
 dist/
 bin/
+reports/
 
 # Go workspace files
 go.work

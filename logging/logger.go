@@ -5,7 +5,6 @@ package logging
 import (
 	"log/slog"
 	"os"
-	"runtime"
 	"syscall"
 	"unsafe"
 
@@ -38,9 +37,9 @@ func enableWindowsStdoutColor() {
 	_, _, _ = procSetConsoleMode.Call(handle, uintptr(mode))
 }
 
-func Init() {
+func Init(IsProduction bool) {
 	// Включаем поддержку ANSI-цветов для Windows
-	if runtime.GOOS == "windows" {
+	if !IsProduction {
 		enableWindowsStdoutColor()
 	}
 	// Создаём каталог logs, если его нет
@@ -52,7 +51,7 @@ func Init() {
 	// Основной лог с ротацией
 	mainLog := &lumberjack.Logger{
 		Filename:   "logs/registry.log",
-		MaxSize:    10, // MB
+		MaxSize:    2, // MB
 		MaxBackups: 3,
 		MaxAge:     3, // days
 		Compress:   true,
@@ -61,7 +60,7 @@ func Init() {
 	// Лог ошибок с ротацией
 	errorLog := &lumberjack.Logger{
 		Filename:   "logs/error.log",
-		MaxSize:    10,
+		MaxSize:    2,
 		MaxBackups: 3,
 		MaxAge:     3,
 		Compress:   true,
@@ -90,8 +89,13 @@ func Init() {
 }
 
 // Функция для обновления уровня после загрузки .env
-func SetLevel(levelStr string) {
-	level := ParseLogLevel(levelStr)
+func SetLevel(IsProduction bool) {
+	var level slog.Level
+	if IsProduction {
+		level = ParseLogLevel(os.Getenv("PROD_LOG_LEVEL"))
+	} else {
+		level = ParseLogLevel(os.Getenv("DEV_LOG_LEVEL"))
+	}
 	LogVar.Set(level)
 	slog.Info("Уровень логирования успешно обновлен", "level", level.String())
 }

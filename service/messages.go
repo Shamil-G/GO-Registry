@@ -82,6 +82,6 @@ func GetAllMessage(ctx context.Context) []MessageItem {
 		listMessage = append(listMessage, item)
 	}
 
-	slog.Debug("Бизнес-логика: Сообщения успешно загружены", "count", len(listMessage))
+	// slog.Debug("Бизнес-логика: Сообщения успешно загружены", "count", len(listMessage))
 	return listMessage
 }
