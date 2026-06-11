@@ -3,6 +3,7 @@ package config
 import (
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -17,8 +18,14 @@ type Config struct {
 	ListenAddr string
 	SSOServer  string
 	// TrustedServers []string
-	LOGIN_PAGE  string
-	PUBLIC_PATH []string
+	LOGIN_PAGE    string
+	PUBLIC_PATH   []string
+	Boss          []string
+	ApproveAdmins []string
+	//
+	TESTER_LOGIN_NAME string
+	TESTER_TOP_LEVEL  int
+	TESTER_TOP_VIEW   int
 	// Oracle DB
 	DBServer             string
 	DBUser               string
@@ -101,6 +108,19 @@ func IsPublicPath(path string) bool {
 	return false
 }
 
+func parseCSVList(raw string) []string {
+	result := make([]string, 0)
+	parts := strings.Split(raw, ",")
+
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			result = append(result, p)
+		}
+	}
+	return result
+}
+
 // LoadConfig читает файл .env и возвращает заполненную структуру
 func LoadConfig(IsProduction bool) error {
 	// Загружаем переменные из файла .env в окружение процесса
@@ -117,12 +137,20 @@ func LoadConfig(IsProduction bool) error {
 
 	// Извлекаем строку доверенных серверов и бьем её по запятой в массив
 	PhoneBook = os.Getenv("PHONE_BOOK")
-
+	topLevel, _ := strconv.Atoi(getEnv("TESTER_TOP_LEVEL", "0"))
+	topView, _ := strconv.Atoi(getEnv("TESTER_TOP_VIEW", "0"))
 	Cfg = &Config{
-		IsProd:     IsProduction,
-		ListenAddr: listenAddr,
-		SSOServer:  getEnv("SSO_SERVER", "192.168.1.34:8025"),
-		LOGIN_PAGE: getEnv("LOGIN_PAGE", "/login"),
+		IsProd:        IsProduction,
+		ListenAddr:    listenAddr,
+		SSOServer:     getEnv("SSO_SERVER", "192.168.1.34:8025"),
+		LOGIN_PAGE:    getEnv("LOGIN_PAGE", "/login"),
+		Boss:          parseCSVList(os.Getenv("Boss")),
+		ApproveAdmins: parseCSVList(os.Getenv("ApproveAdmins")),
+		PUBLIC_PATH:   parseCSVList(os.Getenv("PUBLIC_PATH")),
+		//
+		TESTER_LOGIN_NAME: getEnv("TESTER_LOGIN_NAME", "/login"),
+		TESTER_TOP_LEVEL:  topLevel,
+		TESTER_TOP_VIEW:   topView,
 		// Oracle
 		DBServer:      os.Getenv("DB_SERVER"),
 		DBUser:        os.Getenv("DB_USER"),
@@ -136,7 +164,8 @@ func LoadConfig(IsProduction bool) error {
 		// = 180  # Время в секундах, в течении которого может существоват сеанс
 		DBMaxLifeTimeSession: getEnv("DBMaxLifeTimeSession", "180"),
 	}
-	LoadPublicPaths()
+	// LoadPublicPaths()
 	slog.Info("[LoadConfig]", "PUBLIC_PATH", Cfg.PUBLIC_PATH)
+	slog.Debug("[LoadConfig]", "Boss", Cfg.Boss, "ApproveAdmins", Cfg.ApproveAdmins)
 	return nil
 }
