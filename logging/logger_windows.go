@@ -79,9 +79,10 @@ func Init(IsProduction bool) {
 	})
 
 	// JSON‑лог ошибок
-	jsonError := slog.NewJSONHandler(errorLog, &slog.HandlerOptions{
-		Level: slog.LevelError,
-	})
+	jsonError := NewLevelFilter(
+		slog.LevelError,
+		slog.NewJSONHandler(errorLog, nil),
+	)
 
 	// MultiHandler (консоль + файл + error.log)
 	handler := NewMultiHandler(console, jsonFile, jsonError)

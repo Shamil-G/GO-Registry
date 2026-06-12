@@ -45,21 +45,20 @@ func Init(IsProduction bool) {
 		Level: LogVar,
 	})
 
-	// JSON‑лог в файл
+	// JSON‑лог в файл (всё)
 	jsonFile := slog.NewJSONHandler(mainLog, &slog.HandlerOptions{
 		Level: LogVar,
 	})
 
-	// JSON‑лог ошибок
-	jsonError := slog.NewJSONHandler(errorLog, &slog.HandlerOptions{
-		Level: slog.LevelError,
-	})
+	// JSON‑лог ошибок (только ERROR и выше)
+	jsonError := NewLevelFilter(
+		slog.LevelError,
+		slog.NewJSONHandler(errorLog, nil),
+	)
 
-	// MultiHandler (консоль + файл + error.log)
 	handler := NewMultiHandler(console, jsonFile, jsonError)
-
-	// Устанавливаем глобальный логгер
 	slog.SetDefault(slog.New(handler))
+
 }
 
 // Функция для обновления уровня после загрузки .env
