@@ -116,6 +116,10 @@ func LoadConfig(IsProduction bool) error {
 	if IsProduction {
 		dbMaxConns = getEnv("DB_MAX_CONNS", "8")
 	}
+	sso_server := getEnv("PROD_SSO_SERVER", "")
+	if !IsProduction {
+		sso_server = getEnv("DEV_SSO_SERVER", "")
+	}
 
 	// Извлекаем строку доверенных серверов и бьем её по запятой в массив
 	PhoneBook = os.Getenv("PHONE_BOOK")
@@ -124,7 +128,7 @@ func LoadConfig(IsProduction bool) error {
 	Cfg = &Config{
 		IsProd:        IsProduction,
 		ListenAddr:    listenAddr,
-		SSOServer:     getEnv("SSO_SERVER", "192.168.1.34:8025"),
+		SSOServer:     sso_server,
 		LOGIN_PAGE:    getEnv("LOGIN_PAGE", "/login"),
 		Boss:          parseCSVList(os.Getenv("Boss")),
 		ApproveAdmins: parseCSVList(os.Getenv("ApproveAdmins")),
