@@ -33,6 +33,7 @@ func Init() error {
 		slog.Error("INIT DB", "Ошибка открытия пула Oracle", err)
 		return fmt.Errorf("ошибка открытия пула Oracle: %w", err)
 	}
+	slog.Info("[INIT DB] DB Opened")
 
 	// Парсим максимальное количество соединений из строки в число
 	maxConns, err := strconv.Atoi(config.Cfg.DBMaxConns)
@@ -56,6 +57,7 @@ func Init() error {
 		slog.Error("INIT DB", "База Oracle недоступна (ping failed)", err)
 		return fmt.Errorf("База Oracle недоступна (ping failed): %w", err)
 	}
+	slog.Info("[INIT DB] База Oracle доступна (ping succeeded)")
 
 	// 3. Запускаем метрики пула
 	metrics.StartDBPoolMetrics(DB.DB)
