@@ -89,8 +89,7 @@ func PageContext(next http.Handler) http.Handler {
 }
 
 func GetIPFromContext(ctx context.Context) string {
-	page := GetOrCreatePageCtx(ctx)
-	return page.IP
+	return GetOrCreatePageCtx(ctx).IP
 }
 
 // GetClientIP — оригинальная функция извлечения IP из HTTP заголовков

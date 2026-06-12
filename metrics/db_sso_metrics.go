@@ -1,13 +1,31 @@
+// metrics/db_sso_metrics.go
+
 package metrics
 
 import "github.com/prometheus/client_golang/prometheus"
 
+var DBBuckets = []float64{
+	10, 20, 40, 80,
+	160, 320, 640,
+	1000, 2000, 4000,
+	8000, 16000, 32000,
+	64000, 128000, 256000,
+	512000, 1024000,
+}
+
+var SSOBuckets = []float64{
+	10, 20, 40, 80,
+	160, 320, 640,
+	1000, 2000, 4000,
+	8000, 750000, 2058000,
+}
+
 var (
 	DBSelectDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "db_select_duration_ms",
-			Help:    "DB SELECT latency in milliseconds",
-			Buckets: prometheus.ExponentialBuckets(1, 2, 12),
+			Name:    "db_select_duration_us",
+			Help:    "DB SELECT latency in micro-seconds",
+			Buckets: DBBuckets,
 		},
 		[]string{"query"},
 	)
@@ -30,9 +48,9 @@ var (
 
 	DBSPDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "db_sp_duration_ms",
-			Help:    "Stored procedure latency in milliseconds",
-			Buckets: prometheus.ExponentialBuckets(1, 2, 12),
+			Name:    "db_sp_duration_us",
+			Help:    "Stored procedure latency in micro-seconds",
+			Buckets: DBBuckets,
 		},
 		[]string{"procedure"},
 	)
@@ -55,9 +73,9 @@ var (
 
 	SSORequestDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "sso_request_duration_ms",
-			Help:    "SSO request latency in milliseconds",
-			Buckets: prometheus.ExponentialBuckets(1, 2, 12),
+			Name:    "sso_request_duration_us",
+			Help:    "SSO request latency in micro-seconds",
+			Buckets: SSOBuckets,
 		},
 		[]string{"endpoint", "code"},
 	)
@@ -69,9 +87,55 @@ var (
 		},
 		[]string{"endpoint", "code"},
 	)
+
+	DBPoolOpen = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "db_pool_open_connections",
+			Help: "Number of open DB connections",
+		},
+	)
+
+	DBPoolInUse = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "db_pool_in_use_connections",
+			Help: "Number of DB connections currently in use",
+		},
+	)
+
+	DBPoolIdle = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "db_pool_idle_connections",
+			Help: "Number of idle DB connections",
+		},
+	)
+
+	HttpRequests = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests",
+		},
+		[]string{"method", "path"},
+	)
+
+	HttpRequestDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_request_duration_ms",
+			Help:    "HTTP request latency in milliseconds",
+			Buckets: prometheus.ExponentialBuckets(1, 2, 12),
+		},
+		[]string{"method", "path"},
+	)
+
+	HttpErrors = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_errors_total",
+			Help: "Total number of HTTP errors",
+		},
+		[]string{"method", "path", "code"},
+	)
 )
 
-func MustRegister() {
+func Init() {
 	prometheus.MustRegister(
 		DBSelectDuration,
 		DBSelectTotal,
@@ -81,5 +145,11 @@ func MustRegister() {
 		DBSPErrors,
 		SSORequestDuration,
 		SSORequestTotal,
+		HttpRequests,
+		HttpRequestDuration,
+		HttpErrors,
+		DBPoolOpen,
+		DBPoolInUse,
+		DBPoolIdle,
 	)
 }

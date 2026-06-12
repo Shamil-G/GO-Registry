@@ -1,3 +1,5 @@
+// storage/oracle-client.go
+
 package storage
 
 import (
@@ -55,6 +57,8 @@ func Init() error {
 		return fmt.Errorf("База Oracle недоступна (ping failed): %w", err)
 	}
 
+	// 3. Запускаем метрики пула
+	metrics.StartDBPoolMetrics(DB.DB)
 	return nil
 }
 

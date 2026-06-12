@@ -10,44 +10,25 @@ import (
 
 func Metrics(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Пропускаем всё, что не в списке
-		cfg, ok := metrics.Endpoints[r.URL.Path]
-		if !ok {
-			// endpoint не мониторим
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Проверяем метод
-		if cfg.Method != r.Method {
-			next.ServeHTTP(w, r)
-			return
-		}
-
 		start := time.Now()
-		// Передаем управление по адресу w
+
+		// Выполняем запрос
 		next.ServeHTTP(w, r)
-		// Запрос обработан, получен ответ и изменяем продолжительность!
-		duration := float64(time.Since(start).Microseconds()) / 1000.0 // ms
-		// Счетчик запросов
+
+		// Длительность
+		durationMs := float64(time.Since(start).Microseconds())
+
+		// Счётчик запросов
 		metrics.HttpRequests.WithLabelValues(r.Method, r.URL.Path).Inc()
 
-		// Выбор бакета
-		switch cfg.Speed {
-		case metrics.FAST:
-			metrics.FastDuration.WithLabelValues(cfg.Method, r.URL.Path).Observe(duration)
-		case metrics.MIDDLE:
-			metrics.MiddleDuration.WithLabelValues(cfg.Method, r.URL.Path).Observe(duration)
-		case metrics.SLOW:
-			metrics.SlowDuration.WithLabelValues(cfg.Method, r.URL.Path).Observe(duration)
-		}
+		// Гистограмма длительности
+		metrics.HttpRequestDuration.WithLabelValues(r.Method, r.URL.Path).Observe(durationMs)
 
-		dur := time.Since(start)
-
-		slog.Info("request",
+		// Лог
+		slog.Debug("request",
 			"method", r.Method,
 			"path", r.URL.Path,
-			"duration_ms", float64(dur.Microseconds())/1000,
+			"duration_us", durationMs,
 			"ip", r.RemoteAddr,
 		)
 	})

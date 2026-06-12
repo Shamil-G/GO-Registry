@@ -23,7 +23,7 @@ func Router() http.Handler {
 	// r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	// r.Use(mdw.SlogLogger)
-	// r.Use(mdw.Metrics)
+	r.Use(mdw.Metrics)
 
 	r.Handle("/metrics", promhttp.Handler())
 	// Health
