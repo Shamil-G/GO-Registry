@@ -37,7 +37,12 @@ func PageContext(next http.Handler) http.Handler {
 				page.Theme = cookie.Value
 			}
 		}
-
+		if page.Theme == "" {
+			page.Theme = "color"
+		}
+		if page.Lang == "" {
+			page.Lang = "ru"
+		}
 		// slog.Debug("[PCTX]", "theme", page.Theme, "lang", page.Lang, "ip", page.IP, "path", path)
 
 		// 3. Вызываем метод нашего глобального sso.Client
