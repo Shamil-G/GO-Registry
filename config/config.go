@@ -51,17 +51,18 @@ func getEnv(key, fallback string) string {
 }
 
 func ChooseAddr(IsProduction bool) string {
-	local_port := os.Getenv("DEVELOP_PORT")
-	remote_port := os.Getenv("PROD_PORT")
-	server_addr := getEnv("SERVER_ADDR", "192.168.1.34")
+	server_port := os.Getenv("PROD_PORT")
+	server_addr := getEnv("PROD_SERVER_ADDR", "192.168.1.34")
 
 	if !IsProduction {
+		server_addr = getEnv("DEV_SERVER_ADDR", "127.0.0.1")
+		server_port = os.Getenv("DEVELOP_PORT")
 		slog.Info("Detected DEVELOP mode (Windows)")
-		return "127.0.0.1:" + local_port
+	} else {
+		slog.Info("Detected PRODUCTION mode (Linux)")
 	}
 
-	slog.Info("Detected PRODUCTION mode (Linux)")
-	return server_addr + ":" + remote_port
+	return server_addr + ":" + server_port
 }
 
 func IsPublicPath(path string) bool {
