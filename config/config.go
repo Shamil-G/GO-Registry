@@ -112,13 +112,11 @@ func LoadConfig(IsProduction bool) error {
 	listenAddr := ChooseAddr(IsProduction)
 
 	dbMaxConns := "4"
+	sso_server := getEnv("DEV_SSO_SERVER", "")
 
 	if IsProduction {
 		dbMaxConns = getEnv("DB_MAX_CONNS", "8")
-	}
-	sso_server := getEnv("PROD_SSO_SERVER", "")
-	if !IsProduction {
-		sso_server = getEnv("DEV_SSO_SERVER", "")
+		sso_server = getEnv("PROD_SSO_SERVER", "")
 	}
 
 	// Извлекаем строку доверенных серверов и бьем её по запятой в массив

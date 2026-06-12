@@ -12,7 +12,6 @@ go get github.com/xuri/excelize/v2
 go get github.com/natefinch/lumberjack
 go mod tidy
 
-
 ## Стартуем prometeus
 
 ### Докер Grafana
