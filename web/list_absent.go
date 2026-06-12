@@ -2,7 +2,6 @@ package web
 
 import (
 	"bytes"
-	"database/sql"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -34,47 +33,29 @@ func ListAbsent() http.HandlerFunc {
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
 
 		var query string
-		var queryArgs []any
-
 		// Логика формирования SELECT к Oracle осталась оригинальной и проверенной
-		query = `select event_date, time_out, time_in, employee, post, dep_name, cause, head, status, id 
+		query = `select 
+					to_char(event_date, 'DD.MM.YYYY') as event_date, 
+					TO_CHAR(time_out, 'YYYY-MM-DD HH24:MI') as time_out, 
+					TO_CHAR(time_in, 'YYYY-MM-DD HH24:MI') as time_in, 
+					employee, 
+					post, 
+					coalesce(dep_name, ' ') as dep_name, 
+					coalesce(cause, ' ') as cause, 
+					coalesce(head, ' ') as head, 
+					status, 
+					id 
 				from register r
 				where sysdate between time_out and time_in
 				order by event_date desc`
-		slog.Info("Оригинальный SELECT выполнен для СУПЕР-АДМИНА", "user", pageCtx.FIO)
+		slog.Debug("Оригинальный SELECT выполнен для СУПЕР-АДМИНА", "user", pageCtx.FIO)
 
 		// Выполняем QueryContext к Oracle
-		rows, err := storage.DB.QueryContext(r.Context(), query, queryArgs...)
+		var list []TimeOffItem
+		err := storage.DBSelectMany(r.Context(), "list_absent", &list, query)
 		if err != nil {
-			slog.Error("Ошибка получения списка отсутствующих из Oracle", "user", pageCtx.LoginName, "err", err)
 			http.Error(w, "Ошибка базы данных: "+err.Error(), http.StatusInternalServerError)
 			return
-		}
-		defer rows.Close()
-
-		var list []TimeOffItem
-		for rows.Next() {
-			var item TimeOffItem
-			var rawEventDate, rawTimeOut, rawTimeIn, rawHead sql.NullString
-
-			err := rows.Scan(
-				&rawEventDate, &rawTimeOut, &rawTimeIn, &item.Employee,
-				&item.Post, &item.DepName, &item.Cause, &rawHead, &item.Status, &item.ID,
-			)
-			if err != nil {
-				slog.Error("Ошибка сканирования строки согласования", "err", err)
-				continue
-			}
-
-			item.EventDate = rawEventDate.String
-			if len(item.EventDate) > 10 {
-				item.EventDate = item.EventDate[:10]
-			}
-			item.TimeOut = rawTimeOut.String
-			item.TimeIn = rawTimeIn.String
-			item.Head = rawHead.String
-
-			list = append(list, item)
 		}
 
 		// 3. Собираем контекст страницы. Основные поля наследуются автоматически!

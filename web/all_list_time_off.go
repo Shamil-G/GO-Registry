@@ -54,9 +54,8 @@ func AllListTimeOff() http.HandlerFunc {
 				  ORDER BY r.event_date DESC`
 
 		var list []TimeOffItem
-		err := storage.DB.SelectContext(r.Context(), &list, query, selectedMonth)
+		err := storage.DBSelectMany(r.Context(), "all_list", &list, query, selectedMonth)
 		if err != nil {
-			slog.Error("Ошибка получения общего списка отсутствий через sqlx", "month", selectedMonth, "err", err)
 			http.Error(w, "Ошибка базы данных: "+err.Error(), http.StatusInternalServerError)
 			return
 		}

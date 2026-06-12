@@ -16,6 +16,25 @@ import (
 	go_ora "github.com/sijms/go-ora/v2"
 )
 
+const query string = `select 
+					to_char(event_date, 'DD.MM.YYYY') as event_date, 
+					to_char(time_out, 'DD.MM.YYYY HH24:MI') as time_out, 
+					to_char(time_in, 'DD.MM.YYYY HH24:MI') as time_in, 
+					employee, 
+					post, 
+					dep_name, 
+					coalesce(cause, ' ') as cause, 
+					coalesce(head, ' ') as head, 
+					status, 
+					' ' as time_fact,			-- заглушка для поля TimeFact
+					trunc(sysdate - trunc(time_out, 'MM')) as cnt_days, -- расчет для поля CntDays
+					status as status2, 									-- дубликат для поля Status2
+					id
+				from register r
+				where trunc(event_date, 'MM') = trunc(sysdate, 'MM')
+				and status = 3
+				order by event_date desc`
+
 // ListToApproveGet отображает список активных заявок на утверждение (GET /list-to-approve)
 // TimeOffGet отображает список активных заявок сотрудника (GET /time-off)
 func SecureTimeOffGet() http.HandlerFunc {
@@ -24,30 +43,12 @@ func SecureTimeOffGet() http.HandlerFunc {
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
 
 		// 2. ВЫЗЫВАЕМ SELECT ЗАПРОС К ORACLE ЧЕРЕЗ SQLX (Без login_name)
-		query := `select 
-					event_date, 
-					time_out, 
-					time_in, 
-					employee, 
-					post, 
-					dep_name, 
-					coalesce(cause, ' ') as cause, 
-					coalesce(head, ' ') as head, 
-					status, 
-					' ' as time_fact,                                   -- заглушка для поля TimeFact
-					trunc(sysdate - trunc(time_out, 'MM')) as cnt_days, -- расчет для поля CntDays
-					status as status2,                                  -- дубликат для поля Status2
-					id
-				from register r
-				where trunc(event_date, 'MM') = trunc(sysdate, 'MM')
-				and status = 3
-				order by event_date desc`
 
 		var list []TimeOffItem
 		// Передаем только контекст и запрос. ssoUser.LoginName убран, так как в SQL нет плейсхолдеров.
-		err := storage.DB.SelectContext(r.Context(), &list, query)
+
+		err := storage.DBSelectMany(r.Context(), "secure_time_off", &list, query)
 		if err != nil {
-			slog.Error("Ошибка получения списка отсутствий через sqlx", "err", err)
 			http.Error(w, "Ошибка базы данных: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -150,9 +151,7 @@ func SecureTimeOffPost() http.HandlerFunc {
 		slog.Info("Вызов PL/SQL функции reg.add_secure_reg через анонимный блок", "user", pageCtx.LoginName, "ip", clientIP)
 
 		// Вызов функции через именованные параметры для предотвращения ошибок UDT
-		query := `BEGIN 
-					:ret_val := reg.add_secure_reg(:d_out, :d_in, :emp, :pst, :dep, :caus, :fio); 
-				  END;`
+		query := `BEGIN :ret_val := reg.add_secure_reg(:d_out, :d_in, :emp, :pst, :dep, :caus, :fio); END;`
 
 		var oracleResult string
 
@@ -168,7 +167,9 @@ func SecureTimeOffPost() http.HandlerFunc {
 		)
 
 		// Используем ExecContext напрямую со стандартным *sql.DB.
-		_, err := storage.DB.DB.ExecContext(r.Context(), query,
+		// _, err := storage.DB.DB.ExecContext(r.Context(), query,
+		err := storage.DBExecNamed(r.Context(), query,
+			"reg.add_secure_reg",
 			sql.Named("ret_val", go_ora.Out{Dest: &oracleResult, Size: 256}),
 			sql.Named("d_out", dOutParam),
 			sql.Named("d_in", dInParam),
@@ -181,7 +182,6 @@ func SecureTimeOffPost() http.HandlerFunc {
 
 		// Обработка системных ошибок связи с Oracle
 		if err != nil {
-			slog.Error("Критическая ошибка выполнения анонимного блока reg.add_secure_time_off", "err", err)
 			http.Error(w, "Ошибка связи с базой данных: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -196,24 +196,8 @@ func SecureTimeOffPost() http.HandlerFunc {
 
 			// Дозапрашиваем актуальный список записей (точно такой же запрос, как в отлаженном GET)
 			var list []TimeOffItem
-			queryGet := `select 
-							to_char(event_date, 'DD.MM.YYYY') as event_date, 
-							to_char(time_out, 'DD.MM.YYYY HH24:MI') as time_out, 
-							to_char(time_in, 'DD.MM.YYYY HH24:MI') as time_in, 
-							employee, post, dep_name, 
-							coalesce(cause, ' ') as cause, 
-							coalesce(head, ' ') as head, 
-							status, 
-							' ' as time_fact,
-							trunc(sysdate - trunc(time_out, 'MM')) as cnt_days, 
-							status as status2, 
-							id
-						from register r
-						where trunc(event_date, 'MM') = trunc(sysdate, 'MM')
-						and status = 3
-						order by event_date desc`
 
-			_ = storage.DB.SelectContext(r.Context(), &list, queryGet)
+			_ = storage.DBSelectMany(r.Context(), "secure_time_off_post", &list, query)
 
 			// Получаем сообщения для базового шаблона
 			messages := message.GetAllMessage(r.Context())

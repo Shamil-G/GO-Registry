@@ -3,7 +3,7 @@ package web
 import (
 	// "html/template"
 	"bytes"
-	"database/sql"
+	// "database/sql"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -69,18 +69,19 @@ func NewMessagePost() http.HandlerFunc {
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
 
 		newMessage := r.FormValue("new_message")
-		query := `begin reg.new_message(:employee, :dep_name, :message); end;`
+		// query := `begin reg.new_message(:employee, :dep_name, :message); end;`
 
 		// Используем ExecContext напрямую со стандартным *sql.DB.
-		_, err := storage.DB.DB.ExecContext(r.Context(), query,
-			sql.Named("employee", pageCtx.FIO),
-			sql.Named("dep_name", pageCtx.DepName),
-			sql.Named("message", newMessage),
-		)
+		// _, err := storage.DB.DB.ExecContext(r.Context(), query,
+		// 	sql.Named("employee", pageCtx.FIO),
+		// 	sql.Named("dep_name", pageCtx.DepName),
+		// 	sql.Named("message", newMessage),
+		// )
+
+		err := storage.DBExec(r.Context(), "reg.new_message", pageCtx.FIO, pageCtx.DepName, newMessage)
 
 		// Обработка системных ошибок связи с Oracle
 		if err != nil {
-			slog.Error("Критическая ошибка выполнения анонимного блока reg.add_secure_time_off", "err", err)
 			http.Error(w, "Ошибка связи с базой данных: "+err.Error(), http.StatusInternalServerError)
 			return
 		}

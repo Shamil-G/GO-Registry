@@ -2,7 +2,6 @@ package web
 
 import (
 	"bytes"
-	"database/sql"
 	"fmt"
 	"html/template"
 	"log/slog"
@@ -45,17 +44,20 @@ func ListToApproveGet() http.HandlerFunc {
 		var query string
 		var queryArgs []any
 
+		var err error
+		// Выполняем QueryContext к Oracle
+		var list []TimeOffItem
 		// Логика формирования SELECT к Oracle осталась оригинальной и проверенной
 		if isAdmin {
 			query = `SELECT 
-						event_date, 
-						TO_CHAR(time_out, 'YYYY-MM-DD HH24:MI'), 
-						TO_CHAR(time_in, 'YYYY-MM-DD HH24:MI'), 
+						to_char(event_date, 'DD.MM.YYYY') as event_date, 
+						TO_CHAR(time_out, 'YYYY-MM-DD HH24:MI') as time_out, 
+						TO_CHAR(time_in, 'YYYY-MM-DD HH24:MI') as time_in, 
 						employee, 
 						post, 
-						nvl(dep_name, ' '), 
-						cause, 
-						NVL(head, ' '), 
+						coalesce(dep_name, ' ') as dep_name, 
+						coalesce(cause, ' ') as cause, 
+						coalesce(head, ' ') as head, 
 						status, 
 						id
 					 FROM register r
@@ -63,6 +65,7 @@ func ListToApproveGet() http.HandlerFunc {
 					 AND   status = 0
 					 ORDER BY event_date DESC`
 			slog.Info("Оригинальный SELECT выполнен для СУПЕР-АДМИНА", "user", pageCtx.LoginName)
+			err = storage.DBSelectMany(r.Context(), "list_approve", &list, query)
 		} else {
 			var targetDepartments []string
 			if isBigBoss {
@@ -80,14 +83,14 @@ func ListToApproveGet() http.HandlerFunc {
 			inClause := strings.Join(placeholders, ", ")
 
 			query = fmt.Sprintf(`SELECT 
-						event_date, 
-						TO_CHAR(time_out, 'YYYY-MM-DD HH24:MI'), 
-						TO_CHAR(time_in, 'YYYY-MM-DD HH24:MI'), 
+						to_char(event_date, 'DD.MM.YYYY') as event_date, 
+						TO_CHAR(time_out, 'YYYY-MM-DD HH24:MI') as time_out, 
+						TO_CHAR(time_in, 'YYYY-MM-DD HH24:MI') as time_in, 
 						employee, 
 						post, 
-						coalesce(dep_name, ' '), 
-						cause, 
-						NVL(head, ' '), 
+						coalesce(dep_name, ' ') as dep_name, 
+						coalesce(cause, ' ') as cause, 
+						coalesce(head, ' ') as head, 
 						status, 
 						id
 					  FROM register r
@@ -96,41 +99,13 @@ func ListToApproveGet() http.HandlerFunc {
 					  AND   dep_name IN (%s)
 					  ORDER BY event_date DESC`, inClause)
 
+			err = storage.DBSelectMany(r.Context(), "list_approve", &list, query, queryArgs...)
 			slog.Info("Оригинальный SELECT выполнен для РУКОВОДИТЕЛЯ", "user", pageCtx.LoginName, "deps", len(targetDepartments))
 		}
 
-		// Выполняем QueryContext к Oracle
-		rows, err := storage.DB.QueryContext(r.Context(), query, queryArgs...)
 		if err != nil {
-			slog.Error("Ошибка получения списка согласования из Oracle", "user", pageCtx.LoginName, "err", err)
 			http.Error(w, "Ошибка базы данных: "+err.Error(), http.StatusInternalServerError)
 			return
-		}
-		defer rows.Close()
-
-		var list []TimeOffItem
-		for rows.Next() {
-			var item TimeOffItem
-			var rawEventDate, rawTimeOut, rawTimeIn, rawHead sql.NullString
-
-			err := rows.Scan(
-				&rawEventDate, &rawTimeOut, &rawTimeIn, &item.Employee,
-				&item.Post, &item.DepName, &item.Cause, &rawHead, &item.Status, &item.ID,
-			)
-			if err != nil {
-				slog.Error("Ошибка сканирования строки согласования", "err", err)
-				continue
-			}
-
-			item.EventDate = rawEventDate.String
-			if len(item.EventDate) > 10 {
-				item.EventDate = item.EventDate[:10]
-			}
-			item.TimeOut = rawTimeOut.String
-			item.TimeIn = rawTimeIn.String
-			item.Head = rawHead.String
-
-			list = append(list, item)
 		}
 
 		// 3. Собираем контекст страницы. Основные поля наследуются автоматически!
@@ -177,7 +152,7 @@ func RefuseTimeOffPost() http.HandlerFunc {
 
 		// Дополнительный щит: если это не босс и не админ, рубим запрос сразу
 		if !pageCtx.IsBoss {
-			slog.Warn("Отказ в доступе к процедуре отклонения", "user", pageCtx.LoginName)
+			slog.Error("Отказ в доступе к процедуре отклонения", "user", pageCtx.LoginName)
 			http.Error(w, "Доступ запрещен", http.StatusForbidden)
 			return
 		}
@@ -190,20 +165,19 @@ func RefuseTimeOffPost() http.HandlerFunc {
 			return
 		}
 
-		clientIP := middleware.GetIPFromContext(r.Context())
-		slog.Info("Запуск процедуры reg.refuse_time_off", "id_reg", id, "boss", pageCtx.FIO, "ip", clientIP)
+		slog.Debug("Запуск процедуры reg.refuse_time_off", "id_reg", id, "boss", pageCtx.FIO, "ip", pageCtx.IP)
 
 		// 3. Вызываем оригинальную хранимую процедуру отказа в Oracle
-		query := `BEGIN reg.refuse_time_off(:1, :2); END;`
+		// query := `BEGIN reg.refuse_time_off(:1, :2); END;`
 
-		_, err = storage.DB.ExecContext(r.Context(), query, id, pageCtx.FIO)
+		// // _, err = storage.DB.ExecContext(r.Context(), query, id, pageCtx.FIO)
+		err = storage.DBExec(r.Context(), "reg.refuse_time_off", id, pageCtx.FIO)
 		if err != nil {
-			slog.Error("Критическая ошибка выполнения reg.refuse_time_off в Oracle", "id", id, "err", err)
 			http.Error(w, "Ошибка базы данных при отклонении: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		slog.Info("Заявка успешно отклонена", "id_reg", id, "boss", pageCtx.FIO)
+		slog.Debug("Заявка отклонена", "id_reg", id, "boss", pageCtx.FIO)
 
 		// 4. Редирект обратно в панель с параметром отказа
 		http.Redirect(w, r, "/list-to-approve?msg=refused", http.StatusSeeOther)
@@ -218,7 +192,7 @@ func ApproveTimeOffPost() http.HandlerFunc {
 
 		// Дополнительный щит безопасности: если это не босс и не админ, рубим запрос сразу
 		if !pageCtx.IsBoss {
-			slog.Warn("Отказ в доступе к процедуре одобрения", "user", pageCtx.LoginName)
+			slog.Error("Отказ в доступе к процедуре одобрения", "user", pageCtx.LoginName)
 			http.Error(w, "Доступ запрещен. Вы не являетесь руководителем.", http.StatusForbidden)
 			return
 		}
@@ -233,20 +207,20 @@ func ApproveTimeOffPost() http.HandlerFunc {
 		}
 
 		clientIP := middleware.GetIPFromContext(r.Context())
-		slog.Info("Запуск процедуры reg.approve_time_off", "id_reg", id, "boss", pageCtx.FIO, "ip", clientIP)
+		slog.Debug("Запуск процедуры reg.approve_time_off", "id_reg", id, "boss", pageCtx.FIO, "ip", clientIP)
 
 		// 3. Вызываем оригинальную хранимую процедуру пакета Oracle
-		query := `BEGIN reg.approve_time_off(:1, :2); END;`
+		// query := `BEGIN reg.approve_time_off(:1, :2); END;`
 
 		// Передаем ID (:1) и Полное ФИО босса (:2) строго по контракту
-		_, err = storage.DB.ExecContext(r.Context(), query, id, pageCtx.FIO)
+		// _, err = storage.DB.ExecContext(r.Context(), query, id, pageCtx.FIO)
+		err = storage.DBExec(r.Context(), "reg.approve_time_off", id, pageCtx.FIO)
 		if err != nil {
-			slog.Error("Критическая ошибка выполнения reg.approve_time_off в Oracle", "id", id, "err", err)
 			http.Error(w, "Ошибка базы данных при согласовании: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		slog.Info("Заявка успешно одобрена", "id_reg", id, "boss", pageCtx.FIO)
+		slog.Debug("Заявка успешно одобрена", "id_reg", id, "boss", pageCtx.FIO)
 
 		// 4. Редирект обратно в панель с параметром успеха
 		http.Redirect(w, r, "/list-to-approve?msg=approved", http.StatusSeeOther)

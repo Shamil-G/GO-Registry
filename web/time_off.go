@@ -74,9 +74,9 @@ func TimeOffGet() http.HandlerFunc {
 
 		var list []TimeOffItem
 		// sqlx сам выполнит запрос, промапит колонки по тегам db и запишет в слайс list
-		err := storage.DB.SelectContext(r.Context(), &list, query, pageCtx.FIO)
+		// err := storage.DB.SelectContext(r.Context(), &list, query, pageCtx.FIO)
+		err := storage.DBSelectMany(r.Context(), "time_off_get", &list, query, pageCtx.FIO)
 		if err != nil {
-			slog.Error("Ошибка получения списка отсутствий из Oracle через sqlx", "user", pageCtx.LoginName, "err", err)
 			http.Error(w, "Ошибка базы данных: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -182,7 +182,9 @@ func TimeOffPost() http.HandlerFunc {
 		var oracleResult string
 
 		// Передаем параметры через sql.Named. Каждая переменная имеет четкий тип string.
-		_, err := storage.DB.DB.ExecContext(r.Context(), query,
+		// _, err := storage.DB.DB.ExecContext(r.Context(), query,
+		err := storage.DBExecNamed(r.Context(), query,
+			"reg.add_reg",
 			sql.Named("ret_val", go_ora.Out{Dest: &oracleResult, Size: 256}),
 			sql.Named("d_out", string(formattedDateOut)),
 			sql.Named("d_in", string(formattedDateIn)),
@@ -194,15 +196,12 @@ func TimeOffPost() http.HandlerFunc {
 
 		// Обработка системных ошибок связи с Oracle
 		if err != nil {
-			slog.Error("Критическая ошибка выполнения анонимного блока reg.add_reg", "err", err)
 			http.Error(w, "Ошибка связи с базой данных: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		slog.Info("Результат выполнения функции reg.add_reg", "status", oracleResult)
-
 		// Анализируем текстовый ответ из Oracle
-		slog.Info("Результат выполнения функции reg.add_reg", "status", oracleResult)
+		slog.Debug("Результат выполнения функции reg.add_reg", "status", oracleResult)
 
 		// АНАЛИЗИРУЕМ ТЕКСТОВЫЙ ОТВЕТ ИЗ ORACLE
 		if oracleResult != "Success" {
@@ -218,7 +217,7 @@ func TimeOffPost() http.HandlerFunc {
 			                    employee, post, dep_name, coalesce(cause, ' ') as cause, 
 			                    coalesce(head, ' ') as head, status, id 
 			             FROM register WHERE employee = :1 ORDER BY event_date DESC`
-			_ = storage.DB.SelectContext(r.Context(), &list, queryGet, pageCtx.FIO)
+			_ = storage.DBSelectMany(r.Context(), "time_off_post", &list, queryGet, pageCtx.FIO)
 
 			// 2. Собираем сообщения i18n
 			messages := message.GetAllMessage(r.Context())
@@ -282,15 +281,14 @@ func DelFromListTimeOff() http.HandlerFunc {
 		}
 
 		// Извлекаем сохраненный в мидлвари IP-адрес для системных логов
-		clientIP := middleware.GetIPFromContext(r.Context())
-		slog.Info("Запрос на безопасное POST-удаление отсутствия", "user", pageCtx.LoginName, "id", id, "ip", clientIP)
+		slog.Info("Запрос на безопасное POST-удаление отсутствия", "user", pageCtx.LoginName, "id", id, "ip", pageCtx.IP)
 
 		// 3. Вызываем хранимую процедуру Oracle
-		query := `BEGIN reg.del_time_off(:1); END;`
+		// query := `BEGIN reg.del_time_off(:1); END;`
 
-		_, err = storage.DB.ExecContext(r.Context(), query, id)
+		// _, err = storage.DB.ExecContext(r.Context(), query, id)
+		err = storage.DBExec(r.Context(), "reg.del_time_off", id)
 		if err != nil {
-			slog.Error("Критическая ошибка выполнения процедуры reg.del_time_off в Oracle через POST", "id", id, "err", err)
 			http.Error(w, "Ошибка удаления в базе Oracle: "+err.Error(), http.StatusInternalServerError)
 			return
 		}

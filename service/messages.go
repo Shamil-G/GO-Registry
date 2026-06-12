@@ -3,9 +3,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
-	"log/slog"
-	"strings"
 
 	// Подключите ваш пакет с пулом соединений к Oracle (например, storage)
 	"gusseynov/GO-Registry/storage"
@@ -13,75 +10,38 @@ import (
 
 // MessageItem описывает структуру сообщения из базы данных Oracle
 type MessageItem struct {
-	IDMessage int    `json:"id_mess"`
-	Date      string `json:"mess_date"`
-	Author    string `json:"author"`
-	DepName   string `json:"dep_name"`
-	Message   string `json:"message"`
+	IDMessage int    `db:"ID_MESS" json:"id_mess"`
+	Date      string `db:"MESS_DATE" json:"mess_date"`
+	Author    string `db:"AUTHOR" json:"author"`
+	DepName   string `db:"DEP_NAME" json:"dep_name"`
+	Message   string `db:"MESSAGE" json:"message"`
 }
 
 // GetAllMessage вытаскивает сообщения за последние 8 дней из Oracle.
 // Гарантированно возвращает пустой слайс []MessageItem{} вместо nil, защищая UI от падений.
 func GetAllMessage(ctx context.Context) []MessageItem {
-	listMessage := []MessageItem{} // Инициализируем пустой сейфовый слайс []
+	list := []MessageItem{}
 
 	query := `
-		SELECT id_mess, mess_date, author, dep_name, message 
-		FROM messages 
-		WHERE mess_date > sysdate - 8
-		ORDER BY mess_date DESC`
+        SELECT
+            id_mess,
+            SUBSTR(TO_CHAR(mess_date, 'DD.MM.YYYY HH24:MI'), 1, 16) AS mess_date,
+            CASE
+                WHEN author IS NULL THEN ' '
+                ELSE
+                    SUBSTR(author, INSTR(author, ' ') + 1, 1) || '. ' ||
+                    SUBSTR(author, 1, INSTR(author, ' ') - 1)
+            END AS author,
+            COALESCE(dep_name, ' ') AS dep_name,
+            COALESCE(message, ' ') AS message
+        FROM messages
+        WHERE mess_date > sysdate - 8
+        ORDER BY mess_date DESC`
 
-	rows, err := storage.DB.QueryContext(ctx, query)
+	err := storage.DBSelectMany(ctx, "list_messages", &list, query)
 	if err != nil {
-		slog.Error("Критическая ошибка получения сообщений из Oracle", "err", err)
-		return listMessage
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var item MessageItem
-		var rawID sql.NullInt64
-		var rawDate, rawAuthor, rawDep, rawMsg sql.NullString
-
-		err := rows.Scan(&rawID, &rawDate, &rawAuthor, &rawDep, &rawMsg)
-		if err != nil {
-			slog.Error("Ошибка сканирования строки messages в сервисе", "err", err)
-			continue
-		}
-
-		// 1. Форматируем дату до 16 символов (аналог Python: str(row)[0:16])
-		item.Date = rawDate.String
-		if len(item.Date) > 16 {
-			item.Date = item.Date[:16]
-		}
-
-		// 2. Форматируем автора до короткого ФИО (аналог Python: "И. Иванов")
-		authorName := rawAuthor.String
-		if authorName != "" {
-			splitName := strings.Fields(authorName)
-			if len(splitName) >= 2 {
-				// Безопасно берем первую букву имени с учетом UTF-8 (руны)
-				firstNameRunes := []rune(splitName[1])
-				var firstInitial string
-				if len(firstNameRunes) > 0 {
-					firstInitial = string(firstNameRunes[0])
-				}
-				item.Author = firstInitial + ". " + splitName[0]
-			} else {
-				item.Author = authorName
-			}
-		}
-
-		item.IDMessage = int(rawID.Int64)
-		item.DepName = rawDep.String
-		if item.DepName == "" {
-			item.DepName = " "
-		}
-		item.Message = rawMsg.String
-
-		listMessage = append(listMessage, item)
+		return []MessageItem{}
 	}
 
-	// slog.Debug("Бизнес-логика: Сообщения успешно загружены", "count", len(listMessage))
-	return listMessage
+	return list
 }

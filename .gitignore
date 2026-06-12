@@ -8,7 +8,6 @@
 *.out
 *.bin
 *.xlsx
-*.log
 registry.exe
 
 # Go build output

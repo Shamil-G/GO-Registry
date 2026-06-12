@@ -64,26 +64,8 @@ func ChooseAddr(IsProduction bool) string {
 	return server_addr + ":" + remote_port
 }
 
-func LoadPublicPaths() {
-	raw := os.Getenv("PUBLIC_PATHS")
-	Cfg.PUBLIC_PATH = make([]string, 0) // важно!
-
-	if raw == "" {
-		return
-	}
-
-	parts := strings.Split(raw, ",")
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		if p != "" {
-			Cfg.PUBLIC_PATH = append(Cfg.PUBLIC_PATH, p)
-		}
-	}
-}
-
 func IsPublicPath(path string) bool {
 	for _, p := range Cfg.PUBLIC_PATH {
-
 		// 1. Корневой путь "/" — только точное совпадение
 		if p == "/" {
 			if path == "/" {
@@ -146,7 +128,7 @@ func LoadConfig(IsProduction bool) error {
 		LOGIN_PAGE:    getEnv("LOGIN_PAGE", "/login"),
 		Boss:          parseCSVList(os.Getenv("Boss")),
 		ApproveAdmins: parseCSVList(os.Getenv("ApproveAdmins")),
-		PUBLIC_PATH:   parseCSVList(os.Getenv("PUBLIC_PATH")),
+		PUBLIC_PATH:   parseCSVList(os.Getenv("PUBLIC_PATHS")),
 		//
 		TESTER_LOGIN_NAME: getEnv("TESTER_LOGIN_NAME", "/login"),
 		TESTER_TOP_LEVEL:  topLevel,

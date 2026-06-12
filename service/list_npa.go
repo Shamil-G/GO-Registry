@@ -35,11 +35,10 @@ func UseFileStatistic(userName, depName, fileName, filePath string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	query := `BEGIN reg.use_file_statistic(:1, :2, :3, :4); END;`
+	// query := `BEGIN reg.use_file_statistic(:1, :2, :3, :4); END;`
 
-	_, err := storage.DB.ExecContext(ctx, query, userName, depName, fileName, filePath)
+	err := storage.DBExec(ctx, "reg.use_file_statistic", userName, depName, fileName, filePath)
 	if err != nil {
-		slog.Error("Критическая ошибка выполнения reg.use_file_statistic в Oracle", "err", err)
 		return
 	}
 
