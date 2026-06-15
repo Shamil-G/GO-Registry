@@ -22,7 +22,7 @@ import (
 var DB *sqlx.DB
 
 // Init ищет все настройки прямо в config.Cfg и поднимает пул
-func Init() error {
+func Init(IsProduction bool) error {
 	// Собираем строку подключения без таскания параметров
 	connStr := "oracle://" + config.Cfg.DBUser + ":" + config.Cfg.DBPassword + "@" + config.Cfg.DBServer + "/" + config.Cfg.DBServiceName
 	slog.Info("INIT DB", "CONNECTION", connStr)
@@ -36,7 +36,10 @@ func Init() error {
 	slog.Info("[INIT DB] DB Opened")
 
 	// Парсим максимальное количество соединений из строки в число
-	maxConns, err := strconv.Atoi(config.Cfg.DBMaxConns)
+	maxConns := 4 // дефолт
+	if IsProduction {
+		maxConns, err = strconv.Atoi(config.Cfg.DBMaxConns)
+	}
 	if err != nil {
 		slog.Warn("Не удалось распознать DB_MAX_CONNS, ставим дефолт 4", "err", err)
 		maxConns = 4
@@ -59,8 +62,8 @@ func Init() error {
 	}
 	slog.Info("[INIT DB] База Oracle доступна (ping succeeded)")
 
-	// 3. Запускаем метрики пула
-	metrics.StartDBPoolMetrics(DB.DB)
+	// 🚀 Запуск метрик пула
+	metrics.StartDBPoolMetrics(context.Background(), DB.DB)
 	return nil
 }
 

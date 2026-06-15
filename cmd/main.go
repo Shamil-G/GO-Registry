@@ -59,7 +59,7 @@ func main() {
 	logging.Start("REGISTRY Metrics started ...", "duration", time.Since(startMetrics))
 
 	startDB := time.Now()
-	if err := storage.Init(); err != nil {
+	if err := storage.Init(IsProduction); err != nil {
 		slog.Warn("Предупреждение: База Oracle недоступна, работаем автономно", "error", err)
 	}
 	logging.Start("DB Client started ...", "duration", time.Since(startDB))
