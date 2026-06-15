@@ -1,7 +1,8 @@
 global:
   scrape_interval: 5s
+  evaluation_interval: 5s  
 
 scrape_configs:
   - job_name: 'registry'
     static_configs:
-      - targets: ['localhost:5025']
+      - targets: ['localhost:9001']
