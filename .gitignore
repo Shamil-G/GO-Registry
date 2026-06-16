@@ -9,6 +9,7 @@
 *.bin
 *.xlsx
 registry.exe
+registry
 
 # Go build output
 /build/
