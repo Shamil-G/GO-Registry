@@ -1,0 +1,42 @@
+{
+  "title": "REGISTRY — HTTP",
+  "tags": ["registry", "http"],
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HTTP — Avg Latency (ms)",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "rate(http_request_duration_ms_sum{job=\"registry\", path!~\"/static.*\"}[1m])/rate(http_request_duration_ms_count{job=\"registry\", path!~\"/static.*\"}[1m])",
+          "legendFormat": "{{method}} {{path}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP — Errors",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 4 },
+      "targets": [
+        {
+          "expr": "increase(http_errors_total{job=\"registry\", path!~\"/static.*\"}[5m])",
+          "legendFormat": "{{method}} {{path}} — {{code}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP — RPS",
+      "gridPos": { "x": 0, "y": 10, "w": 12, "h": 4 },
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{job=\"registry\", path!~\"/static.*\"}[1m])",
+          "legendFormat": "{{method}} {{path}}"
+        }
+      ]
+    }
+  ]
+}

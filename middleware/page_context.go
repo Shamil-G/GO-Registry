@@ -67,9 +67,10 @@ func PageContext(next http.Handler) http.Handler {
 
 		// 5. Расчет иерархии ролей руководителя по правилам пакета config
 		isAdmin := config.IsSuperAdmin(ssoUser.FIO)
+		isBossPost := config.IsBossPost(ssoUser.Post)
 		isBigBoss := len(ssoUser.SubordinateOU) > 0
-		isSmallBoss := config.IsBossPost(ssoUser.Post)
-		isBoss := isAdmin || isBigBoss || isSmallBoss
+		isBoss := isAdmin || isBigBoss || isBossPost
+		hasSubordinates := len(ssoUser.SubordinateOU) > 0
 
 		// 6. Формируем единый базовый контекст для UI шаблонов
 		page.FIO = ssoUser.FIO
@@ -77,9 +78,11 @@ func PageContext(next http.Handler) http.Handler {
 		page.DepName = ssoUser.DepName
 		page.IsAnonymous = false
 		page.IsBoss = isBoss
+		page.IsAdmin = isAdmin
 		page.LegacyName = ssoUser.LegacyName
 		page.LoginName = ssoUser.LoginName
 		page.RfbnID = ssoUser.RfbnID
+		page.HasSubordinates = hasSubordinates
 		page.SubordinateOU = ssoUser.SubordinateOU
 
 		// 7. Сохраняем и контекст страницы, и сам IP в context запроса (на случай, если IP нужен в логике)

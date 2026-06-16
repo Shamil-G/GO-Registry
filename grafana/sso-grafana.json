@@ -1,0 +1,31 @@
+{
+  "title": "REGISTRY — SSO",
+  "tags": ["registry", "sso"],
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "SSO — Avg Duration (µs)",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "rate(sso_request_duration_us_sum{job=\"registry\"}[1m]) / rate(sso_request_duration_us_count{job=\"registry\"}[1m])",
+          "legendFormat": "{{endpoint}} ({{code}})"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "SSO — Errors",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 4 },
+      "targets": [
+        {
+          "expr": "increase(sso_requests_total{job=\"registry\",code!=\"200\"}[5m])",
+          "legendFormat": "{{endpoint}} — {{code}}"
+        }
+      ]
+    }
+  ]
+}

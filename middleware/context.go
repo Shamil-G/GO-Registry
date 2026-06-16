@@ -11,19 +11,21 @@ var UserKey = userContextKey{}
 
 // BasePageContext содержит информацию о сессии и все готовые флаги для шаблона base.html
 type BasePageContext struct {
-	Lang          string // Язык с дефолтом
-	Theme         string // Тема с дефолтом
-	FIO           string // ФИО (user.FIO)
-	LoginName     string // Имя введенное при регисрации
-	RfbnID        string // Код региона
-	LegacyName    string //
-	DepName       string // Департамент (user.DepName)
-	IP            string
-	Post          string // Должность
-	IsAnonymous   bool   // Флаг для верстки
-	IsBoss        bool   // Флаг руководителя (считается один раз здесь)
-	Time          string
-	SubordinateOU []string
+	Lang            string // Язык с дефолтом
+	Theme           string // Тема с дефолтом
+	FIO             string // ФИО (user.FIO)
+	LoginName       string // Имя введенное при регисрации
+	RfbnID          string // Код региона
+	LegacyName      string //
+	DepName         string // Департамент (user.DepName)
+	IP              string
+	Post            string // Должность
+	IsAnonymous     bool   // Флаг для верстки
+	IsBoss          bool   // Флаг руководителя (считается один раз здесь)
+	IsAdmin         bool   // Флаг руководителя (считается один раз здесь)
+	HasSubordinates bool
+	Time            string
+	SubordinateOU   []string
 }
 
 func GetOrCreatePageCtx(ctx context.Context) *BasePageContext {

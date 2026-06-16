@@ -1,0 +1,60 @@
+{
+  "title": "REGISTRY — DB",
+  "tags": ["registry", "db"],
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "DB Pool — Open",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 3 },
+      "targets": [{ "expr": "db_pool_open_connections{job=\"registry\"}" }]
+    },
+    {
+      "type": "stat",
+      "title": "DB Pool — In Use",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 3 },
+      "targets": [{ "expr": "db_pool_in_use_connections{job=\"registry\"}" }]
+    },
+    {
+      "type": "stat",
+      "title": "DB Pool — Idle",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 3 },
+      "targets": [{ "expr": "db_pool_idle_connections{job=\"registry\"}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "DB SELECT — Avg Duration (µs)",
+      "gridPos": { "x": 0, "y": 3, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "rate(db_select_duration_us_sum{job=\"registry\"}[1m]) / rate(db_select_duration_us_count{job=\"registry\"}[1m])",
+          "legendFormat": "{{query}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "DB SELECT — Errors",
+      "gridPos": { "x": 0, "y": 9, "w": 12, "h": 4 },
+      "targets": [
+        {
+          "expr": "increase(db_select_errors_total{job=\"registry\"}[5m])",
+          "legendFormat": "{{query}} — {{error}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Stored Procedures — Avg Duration (µs)",
+      "gridPos": { "x": 0, "y": 13, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "rate(db_sp_duration_us_sum{job=\"registry\"}[1m]) / rate(db_sp_duration_us_count{job=\"registry\"}[1m])",
+          "legendFormat": "{{procedure}}"
+        }
+      ]
+    }
+  ]
+}

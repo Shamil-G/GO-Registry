@@ -36,12 +36,9 @@ type MessageItem struct {
 // ViewData — основная структура данных для шаблона
 type ViewData struct {
 	*middleware.BasePageContext // 💡 Встраиваем базовый контекст (UserName, DepName, Lang, Theme, IsBoss, IsAnonymous)
-	HasSubordinates             bool
-	IsAdmin                     bool
-	IsBoss                      bool // Дублируем для обратной совместимости, если в шаблоне используется .IsBoss, а не встроенный .BasePageContext.IsBoss
-	UserPost                    string
-	UserDep                     string
-	ListBD                      []ssoPkg.BirthdayUser // Используем тип из ssoPkg для точного маппинга
+	// UserPost string
+	// UserDep  string
+	ListBD []ssoPkg.BirthdayUser // Используем тип из ssoPkg для точного маппинга
 
 	// 💡 Используем строго типизированную структуру из пакета сервиса!
 	AllMessages []message.MessageItem
@@ -74,9 +71,6 @@ func ViewRootGet() http.HandlerFunc {
 		// && !pageCtx.IsAnonymous
 		if !pageCtx.IsAnonymous {
 			// Высчитываем специфичные роли руководителя на основе данных SSO профиля
-			isAdmin := config.IsSuperAdmin(pageCtx.FIO)
-			hasSubordinates := len(pageCtx.SubordinateOU) > 0
-
 			slog.Debug("[ROOT]", "LoginName", pageCtx.LoginName, "FIO", pageCtx.FIO)
 
 			// Заполняем поля структуры для авторизованного отображения
@@ -84,8 +78,6 @@ func ViewRootGet() http.HandlerFunc {
 				BasePageContext: pageCtx,
 				ListBD:          birthdays,
 				AllMessages:     messages,
-				IsAdmin:         isAdmin,
-				HasSubordinates: hasSubordinates,
 				PhoneBook:       config.PhoneBook,
 			}
 		} else {
