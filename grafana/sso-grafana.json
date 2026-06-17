@@ -7,11 +7,11 @@
   "panels": [
     {
       "type": "timeseries",
-      "title": "SSO — Avg Duration (ms)",
+      "title": "SSO — Avg Duration (µs)",
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
       "targets": [
         {
-          "expr": "rate(sso_request_duration_ms_sum{job=\"registry\"}[1m]) / rate(sso_request_duration_ms_count{job=\"registry\"}[1m])",
+          "expr": "rate(sso_request_duration_us_sum{job=\"registry\"}[1m]) / rate(sso_request_duration_us_count{job=\"registry\"}[1m])",
           "legendFormat": "{{endpoint}} ({{code}})"
         }
       ]

@@ -81,7 +81,7 @@ func (s *SSOClient) doSSORequest(endpoint string, req *http.Request) (*http.Resp
 	start := time.Now()
 	resp, err := s.httpClient.Do(req)
 
-	elapsed := time.Since(start).Milliseconds()
+	elapsed := time.Since(start).Microseconds()
 
 	code := "error"
 	if err == nil {
