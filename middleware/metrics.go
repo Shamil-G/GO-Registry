@@ -22,7 +22,8 @@ func Metrics(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 
 		// Длительность
-		durationMs := float64(time.Since(start).Microseconds())
+		//durationMs := float64(time.Since(start).Microseconds())
+		durationMs := float64(time.Since(start).Milliseconds())
 
 		// Счётчик запросов
 		metrics.HttpRequests.WithLabelValues(r.Method, r.URL.Path).Inc()
