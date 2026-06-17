@@ -48,7 +48,7 @@ func ListAbsent() http.HandlerFunc {
 				from register r
 				where sysdate between time_out and time_in
 				order by event_date desc`
-		slog.Debug("Оригинальный SELECT выполнен для СУПЕР-АДМИНА", "user", pageCtx.FIO)
+		slog.Debug("Выполнен запрос LIST_ABSENT для СУПЕР-АДМИНА", "user", pageCtx.FIO)
 
 		// Выполняем QueryContext к Oracle
 		var list []TimeOffItem

@@ -2,9 +2,11 @@ package web
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"gusseynov/GO-Registry/middleware"
@@ -21,7 +23,6 @@ type AllTimeOffPageData struct {
 }
 
 // AllListTimeOff отображает общий список отсутствий с фильтрацией по месяцам (GET/POST /all-time-off)
-// AllListTimeOff отображает общий список отсутствий с фильтрацией по месяцам (GET/POST /all-time-off)
 func AllListTimeOff() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Извлекаем готовый пакет данных из мидлвари
@@ -36,8 +37,19 @@ func AllListTimeOff() http.HandlerFunc {
 			}
 		}
 
-		// 3. Вызываем SELECT запрос к Oracle
-		query := `SELECT 
+		whereClause := "WHERE TRUNC(event_date, 'MM') = TO_DATE(:1, 'YYYY-MM')"
+		// 3. ДОБАВЛЕНИЕ ПРЕФИКСОВ (ФИЛЬТРОВ)
+		if !pageCtx.IsAdmin {
+			if len(pageCtx.SubordinateOU) > 0 {
+				inList := strings.Join(pageCtx.SubordinateOU, "', '")
+				whereClause += fmt.Sprintf(" AND dep_name IN ('%s')", inList)
+			} else {
+				whereClause += fmt.Sprintf(" AND dep_name = '%s'", pageCtx.DepName)
+			}
+		}
+
+		// 4. Финальный SELECT запрос к Oracle
+		query := fmt.Sprintf(`SELECT 
 					TO_CHAR(event_date, 'DD.MM.YYYY') AS event_date, 
 					TO_CHAR(time_out, 'DD.MM.YYYY HH24:MI') AS time_out, 
 					TO_CHAR(time_in, 'DD.MM.YYYY HH24:MI') AS time_in, 
@@ -50,8 +62,8 @@ func AllListTimeOff() http.HandlerFunc {
 					status AS status2, 
 					id
 				  FROM register r
-				  WHERE TRUNC(event_date, 'MM') = TO_DATE(:1, 'YYYY-MM')
-				  ORDER BY r.event_date DESC`
+				  %s
+				  ORDER BY r.event_date DESC`, whereClause)
 
 		var list []TimeOffItem
 		err := storage.DBSelectMany(r.Context(), "all_list", &list, query, selectedMonth)

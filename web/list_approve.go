@@ -64,7 +64,7 @@ func ListToApproveGet() http.HandlerFunc {
 					 WHERE trunc(event_date,'MM') >= trunc(sysdate,'MM')-5
 					 AND   status = 0
 					 ORDER BY event_date DESC`
-			slog.Info("Оригинальный SELECT выполнен для СУПЕР-АДМИНА", "user", pageCtx.LoginName)
+			slog.Info("Выполнен запрос LIST_APPROVE для СУПЕР-АДМИНА", "user", pageCtx.LoginName)
 			err = storage.DBSelectMany(r.Context(), "list_approve", &list, query)
 		} else {
 			var targetDepartments []string
@@ -100,7 +100,7 @@ func ListToApproveGet() http.HandlerFunc {
 					  ORDER BY event_date DESC`, inClause)
 
 			err = storage.DBSelectMany(r.Context(), "list_approve", &list, query, queryArgs...)
-			slog.Info("Оригинальный SELECT выполнен для РУКОВОДИТЕЛЯ", "user", pageCtx.LoginName, "deps", len(targetDepartments))
+			slog.Info("Оригинальный SELECT выполнен для РУКОВОДИТЕЛЯ", "user", pageCtx.LoginName, "кол-во департаментов", len(targetDepartments))
 		}
 
 		if err != nil {

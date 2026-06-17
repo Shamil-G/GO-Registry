@@ -88,7 +88,7 @@ func PageContext(next http.Handler) http.Handler {
 		// 7. Сохраняем и контекст страницы, и сам IP в context запроса (на случай, если IP нужен в логике)
 		ctx := SavePageCtx(r.Context(), page)
 
-		slog.Info("[PCTX]", "REAL USER. LoginName", page.LoginName, "IP", page.IP, "FIO", page.FIO,
+		slog.Info("[PCTX]", "REAL USER. LoginName", page.LoginName, "IP", page.IP, "FIO", page.FIO, "DepName", page.DepName,
 			"THEME", page.Theme, "LANG", page.Lang, "IsBoss", page.IsBoss, "IsAdmin", isAdmin, "Post", page.Post,
 			"SUBORDINATE", page.SubordinateOU)
 

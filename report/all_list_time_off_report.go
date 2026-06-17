@@ -6,8 +6,10 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"gusseynov/GO-Registry/middleware"
 	"gusseynov/GO-Registry/storage"
 
 	"github.com/xuri/excelize/v2"
@@ -35,8 +37,19 @@ func DoAllListTimeOffReport(ctx context.Context, fltMonth, fileName string) (str
 	excel.RemoveDefault()
 	excel.SetActive("Список")
 
+	pageCtx := middleware.GetOrCreatePageCtx(ctx)
+	whereClause := "WHERE TRUNC(event_date, 'MM') = TO_DATE(:1, 'YYYY-MM')"
+	// 3. ДОБАВЛЕНИЕ ПРЕФИКСОВ (ФИЛЬТРОВ)
+	if !pageCtx.IsAdmin {
+		if len(pageCtx.SubordinateOU) > 0 {
+			inList := strings.Join(pageCtx.SubordinateOU, "', '")
+			whereClause += fmt.Sprintf(" AND dep_name IN ('%s')", inList)
+		} else {
+			whereClause += fmt.Sprintf(" AND dep_name = '%s'", pageCtx.DepName)
+		}
+	}
 	// SQL лист
-	query := `
+	query := fmt.Sprintf(`
         SELECT 
             TO_CHAR(event_date, 'DD.MM.YYYY') AS event_date,
             TO_CHAR(time_out, 'DD.MM.YYYY HH24:MI') AS time_out,
@@ -46,9 +59,11 @@ func DoAllListTimeOffReport(ctx context.Context, fltMonth, fileName string) (str
             COALESCE(head, ' ') AS head,
             status
         FROM register
-        WHERE TRUNC(event_date, 'MM') = TO_DATE(:1, 'YYYY-MM')
+		%s
         ORDER BY dep_name, employee, event_date
-    `
+    `, whereClause)
+
+	// 4. Финальный SELECT запрос к Oracle
 	excel.WriteSQL("SQL", query)
 
 	// Заголовки
