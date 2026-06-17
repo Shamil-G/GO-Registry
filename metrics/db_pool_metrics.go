@@ -16,8 +16,8 @@ var (
 
 	DBSelectDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "db_select_duration_us",
-			Help:    "DB SELECT latency (microseconds)",
+			Name:    "db_select_duration_ms",
+			Help:    "DB SELECT latency (ms)",
 			Buckets: DBBuckets,
 		},
 		[]string{"query"},
@@ -41,8 +41,8 @@ var (
 
 	DBSPDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "db_sp_duration_us",
-			Help:    "Stored procedure latency (microseconds)",
+			Name:    "db_sp_duration_ms",
+			Help:    "Stored procedure latency (ms)",
 			Buckets: DBBuckets,
 		},
 		[]string{"procedure"},

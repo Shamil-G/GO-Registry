@@ -25,11 +25,11 @@
     },
     {
       "type": "timeseries",
-      "title": "DB SELECT — Avg Duration (µs)",
+      "title": "DB SELECT — Avg Duration (ms)",
       "gridPos": { "x": 0, "y": 3, "w": 12, "h": 6 },
       "targets": [
         {
-          "expr": "rate(db_select_duration_us_sum{job=\"registry\"}[1m]) / rate(db_select_duration_us_count{job=\"registry\"}[1m])",
+          "expr": "rate(db_select_duration_ms_sum{job=\"registry\"}[1m]) / rate(db_select_duration_ms_count{job=\"registry\"}[1m])",
           "legendFormat": "{{query}}"
         }
       ]
@@ -47,11 +47,11 @@
     },
     {
       "type": "timeseries",
-      "title": "Stored Procedures — Avg Duration (µs)",
+      "title": "Stored Procedures — Avg Duration (ms)",
       "gridPos": { "x": 0, "y": 13, "w": 12, "h": 6 },
       "targets": [
         {
-          "expr": "rate(db_sp_duration_us_sum{job=\"registry\"}[1m]) / rate(db_sp_duration_us_count{job=\"registry\"}[1m])",
+          "expr": "rate(db_sp_duration_ms_sum{job=\"registry\"}[1m]) / rate(db_sp_duration_ms_count{job=\"registry\"}[1m])",
           "legendFormat": "{{procedure}}"
         }
       ]

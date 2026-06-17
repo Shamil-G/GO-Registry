@@ -287,7 +287,9 @@ func (s *SSOClient) CloseSession(ctx context.Context, ip string) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := s.httpClient.Do(req)
+	// resp, err := s.httpClient.Do(req)
+	resp, err := s.doSSORequest("close", req)
+
 	if err != nil {
 		slog.Warn("SSO CLose", "SSO /close недоступен", err)
 		return fmt.Errorf("SSO /close недоступен: %w", err)
@@ -299,7 +301,7 @@ func (s *SSOClient) CloseSession(ctx context.Context, ip string) error {
 
 // Предположим, у вас структура называется Client, и у неё есть поле Address (URL сервера SSO)
 // и httpClient. Если имена другие — подправьте под ваш код.
-func (c *SSOClient) Set(ctx context.Context, ip string, field string, value string) error {
+func (s *SSOClient) Set(ctx context.Context, ip string, field string, value string) error {
 	// Собираем карту строго под ваш рабочий контракт
 	requestBody := map[string]string{
 		"ip_addr": ip,    // <-- ИСПРАВИЛИ КЛЮЧ НА ip_addr
@@ -321,7 +323,9 @@ func (c *SSOClient) Set(ctx context.Context, ip string, field string, value stri
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := c.httpClient.Do(req)
+	// resp, err := c.httpClient.Do(req)
+	resp, err := s.doSSORequest("set", req)
+
 	if err != nil {
 		slog.Error("SSO SET", "Сервер SSO недоступен /set", err)
 		return fmt.Errorf("сервер SSO недоступен: %w", err)

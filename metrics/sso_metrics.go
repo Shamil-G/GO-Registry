@@ -10,8 +10,8 @@ var (
 
 	SSORequestDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "sso_request_duration_us",
-			Help:    "SSO request latency (microseconds)",
+			Name:    "sso_request_duration_ms",
+			Help:    "SSO request latency (milliseconds)",
 			Buckets: SSOBuckets,
 		},
 		[]string{"endpoint", "code"},
