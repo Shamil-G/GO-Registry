@@ -18,11 +18,11 @@
     },
     {
       "type": "timeseries",
-      "title": "SSO — Errors",
+      "title": "SSO — Requests by Endpoint",
       "gridPos": { "x": 0, "y": 6, "w": 12, "h": 4 },
       "targets": [
         {
-          "expr": "increase(sso_requests_total{job=\"registry\",code!=\"200\"}[5m])",
+          "expr": "increase(sso_requests_total{job=\"registry\"}[5m])",
           "legendFormat": "{{endpoint}} — {{code}}"
         }
       ]

@@ -51,6 +51,7 @@ func ViewRootGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// 1. Сквозное чтение объявлений — теперь работает железно для всех, отдавая [] при пустоте
 		messages := message.GetAllMessage(r.Context())
+		slog.Debug("[ROOT] Сообщения успешно получены", "count", len(messages), "PHOTO_FIO", message.MessageItem{}.PhotoFIO)
 
 		startSSO := time.Now()
 		// 3. Сквозное чтение именинников из SSO — тоже доступно анонимам

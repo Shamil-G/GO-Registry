@@ -7,9 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>{{ template "title" . }}</title>
-    
-    <!-- !!! ИСПРАВЛЕНИЕ: Перенесли подключение скриптов наверх, чтобы избежать ошибок инициализации функций !!! -->
-    <!-- <script src="/static/js/theme.js"></script> -->
 </head>
 
 <body data-theme="{{.Theme}}" data-lang="{{.Lang}}">
@@ -56,9 +53,7 @@
     </header>
 
     <nav>
-        <!-- !!! ИСПРАВИЛИ: Теперь блок sidebar_menu полностью контролирует всё содержимое меню !!! -->
         {{ block "sidebar_menu" . }}
-            <!-- Если внутренняя страница не переопределила этот блок, выведется только ОДНА эта кнопка -->
             <a class="nav_button" href="/">← {{ res_value "MAIN_MENU" }}</a>
         {{ end }}
     </nav>
@@ -74,33 +69,73 @@
             </div>
         </article_body>
 
+        <!-- Встраиваем стили для анимации прямо в шаблон, чтобы не трогать файлы стилей -->
+        <style>
+            .zoom-photo {
+                display: block;            /* Делаем картинку блочным элементом */
+                margin-left: auto;         /* Автоматический отступ слева */
+                margin-right: auto;                   
+                
+                width: 100%;
+                max-width: 450px;
+                height: auto;
+                border-radius: 4px;
+                transition: transform 0.3s ease, box-shadow 0.3s ease; /* Плавность анимации */
+                cursor: pointer;
+            }
+            .zoom-photo:hover {
+                transform: scale(1.5); /* Увеличение на 10% */
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Красивая тень при наведении */
+            }
+        </style>
+
+        {{ if .AllMessages }}
         <article_info>
-            {{ if .AllMessages }}
             <div class="news-container">
                 <table>
                     <thead class="news-head">
-                    <tr>
-                        <th>
-                            <a style="font-size: 16px;">{{ res_value "INFORMATION" }}</a>
-                        </th>
-                    </tr>
+                        <tr>
+                            <th>
+                                <a style="font-size: 16px;">{{ res_value "INFORMATION" }}</a>
+                            </th>
+                        </tr>
                     </thead>
-
                     <tbody class="news-tbody">
                     <tr>
                         <td>
                             {{ range .AllMessages }}
+                            <!-- Блок заголовка сообщения (дата и автор) -->
                             <a style="margin-left:2px; font-size: 12px; font-weight:300">{{ .Date }}</a>&nbsp;
                             <a style="font-weight:600">{{ .Author }}</a>
                             <br>
 
                             {{ if .DepName }}
-                            <a style="margin-left: 2px; font-size: 14px; font-weight: 300; font-style: italic">{{ .DepName }}</a>
+                            <a style="margin-left: 2px; font-size: 14px; font-weight: 500; font-style: italic">{{ .DepName }}</a>
                             <br>
                             {{ end }}
+                            <!-- Проверка наличия фотографии -->
+                            {{ if and .PhotoURL (gt (len .PhotoURL) 3) }}
+                            <div style="margin-left: 2px; margin-top: 5px; margin-bottom: 5px; display: block;">
+                                <!-- Текст сообщения оставляем выровненным по левому краю (или как было) -->
+                                <a style="margin-left: 2px; font-size: 16px; font-weight: 500;">{{ .Message }}</a>
+                                <br><br>
 
+                                <!-- Специальный контейнер для фото и его подписей с центрированием текста -->
+                                <div style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
+                                    <a style="font-size: 17px; font-weight: bold; color: #333; display: inline-block; margin-bottom: 8px;">{{ .PhotoFIO }}</a>
+                                    
+                                    <img src="{{ .PhotoURL }}" alt="Photo" class="zoom-photo">
+                                    
+                                    <a style="font-size: 17px; font-weight: 600; color: #666; font-style: italic; display: inline-block; margin-top: 8px;">{{ .PhotoPost }}</a>
+                                </div>
+                            </div>
+                            <br>
+                            {{ else }}
+                            <!-- Ветка без фото: выводится только текст сообщения -->
                             <a style="margin-left: 2px; font-weight: 500;">{{ .Message }}</a>
                             <br><br>
+                            {{ end }}
+                            
                             {{ end }}
                         </td>
                     </tr>
@@ -108,8 +143,9 @@
                 </table>
             </div>
             {{ block "info" . }}{{ end }}
-            {{ end }}
         </article_info>
+        {{ end }}
+
     </article>
 
     <footer>

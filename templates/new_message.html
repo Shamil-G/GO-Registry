@@ -6,13 +6,37 @@
 {{ define "info" }}{{ end }}
 
 {{ define "body" }}
-<form method="POST">
+<!-- ОБЯЗАТЕЛЬНО добавляем enctype -->
+<form method="POST" enctype="multipart/form-data">
     <div>
-        <a style="font-size: 20px; font-weight: 500">{{ res_value "ADD_MESSAGE" }}</a>
+        <a style="font-size: 24px; font-weight: bold">{{ res_value "ADD_MESSAGE" }}</a>
     </div>
-    <div>
-        <textarea style="margin-top: 12px" class="textarea" name="new_message" rows="10" cols="80"></textarea>
+    
+    {{ if .IsHR }}
+    <div style="margin-top: 12px;">
+        <label for="photo_file" style="display: block; font-weight: 500; margin-bottom: 4px;">{{ res_value "PHOTO_FILE" }}</label>
+        <!-- Изменили тип на file и ограничили выбор только картинками -->
+        <input type="file" id="photo_file" name="photo_file" accept="image/*" style="width: 100%; max-width: 660px; padding: 8px 8px; margin-left: 0px;">
     </div>
-    <div style="margin-top: 16px"><button type="submit">{{ res_value "SAVE" }}</button></div>
+
+    <div style="margin-top: 12px;">
+        <label for="photo_fio" style="display: block; font-weight: 500; margin-bottom: 4px;">{{ res_value "PHOTO_FIO" }}</label>
+        <input type="text" class="input_s" name="photo_fio" id="photo_fio" style="width: 100%; max-width: 660px; padding: 8px 8px; margin-left: 0px;">
+    </div>
+
+    <div style="margin-top: 12px;">
+        <label for="photo_post" style="display: block; font-weight: 500; margin-bottom: 4px;">{{ res_value "PHOTO_POST" }}</label>
+        <input type="text" class="input_s" name="photo_post" id="photo_post" style="width: 100%; max-width: 660px; padding: 8px 8px; margin-left: 0px;">
+    </div>
+    {{ end }}
+
+    <div style="margin-top: 12px;">
+        <label for="new_message" style="display: block; font-weight: 500; margin-bottom: 4px;">{{ res_value "MESSAGE" }}</label>
+        <textarea class="textarea" name="new_message" id="new_message" rows="10" cols="80" style="width: 100%; max-width: 660px;"></textarea>
+    </div>
+    
+    <div style="margin-top: 16px;">
+        <button type="submit">{{ res_value "SAVE" }}</button>
+    </div>
 </form>
 {{ end }}

@@ -40,11 +40,11 @@ type ViewTimeOff struct {
 	ListTimeOff                 []TimeOffItem
 	AllMessages                 []message.MessageItem
 	// Поля совместимости со старыми переменными в шаблоне time_off.html
-	Style    string
-	Lang     string
-	UserName string
-	UserPost string
-	UserDep  string
+	// Style    string
+	// Lang     string
+	// UserName string
+	// UserPost string
+	// UserDep  string
 }
 
 // TimeOffGet отображает список активных заявок сотрудника (GET /time-off)

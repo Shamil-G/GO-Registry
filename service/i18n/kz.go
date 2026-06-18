@@ -56,6 +56,11 @@ var KZ = map[string]string{
 
 	// Новое сообщение
 	"ADD_MESSAGE": "Введите сообщение",
+	"MESSAGE":     "Введите сообщение",
+	"PHOTO_URL":   "Ссылка на фото",
+	"PHOTO_FIO":   "ФИО на фото",
+	"PHOTO_POST":  "Должность на фото",
+	"PHOTO_FILE":  "Прикрепить фото",
 
 	"ORDER_NUM": "№",
 	"IP_ADDR":   "IP мекенжайы",
