@@ -100,21 +100,18 @@ func GetIPFromContext(ctx context.Context) string {
 	return GetOrCreatePageCtx(ctx).IP
 }
 
-// GetClientIP — оригинальная функция извлечения IP из HTTP заголовков
 func GetClientIP(r *http.Request) string {
-	if ip := r.Header.Get("CF-Connecting-IP"); ip != "" {
-		return ip
+	// 1. Сначала смотрим X-Forwarded-For, чтобы получить всю цепочку: "IP_юзера, IP_прокси1, IP_прокси2"
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		return strings.TrimSpace(xff)
 	}
 
+	// 2. Если цепочки нет, берем то, что Nginx зафиксировал напрямую
 	if ip := r.Header.Get("X-Real-IP"); ip != "" {
-		return ip
+		return strings.TrimSpace(ip)
 	}
 
-	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
-		parts := strings.Split(ip, ",")
-		return strings.TrimSpace(parts[0])
-	}
-
+	// 3. Резервный вариант для локальной разработки (в обход Nginx)
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err == nil {
 		if host == "::1" {
