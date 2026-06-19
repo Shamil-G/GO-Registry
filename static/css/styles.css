@@ -427,12 +427,17 @@ tbody td {
     border: 1px solid var(--table-border); 
 }
 
+.news-tbody {
+    max-height: 700px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
 tr > td {
     border: var(--table-border);
     margin-left: 4px;
     padding: 3px 4px;
     font-size: 14px;
-    text-align: center;
 }
 
 tr > th {
