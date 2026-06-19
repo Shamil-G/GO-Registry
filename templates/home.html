@@ -4,7 +4,9 @@
 
 {{ define "navigate" }}{{ end }}
 
-{{ define "info" }}<p>Дополнительная информация загружена успешно.</p>{{ end }}
+{{ define "info" }}
+    <p>Дополнительная информация загружена успешно.</p>
+{{ end }}
 
 {{ define "sidebar_menu" }}
     <!-- На главной странице выводим локальную закладку и кнопки ролей -->
@@ -26,7 +28,6 @@
         {{ end }}
 
         {{ if .IsAdmin }}
-        <!-- <a class="nav_button" href="/secure-list-time-off">{{ res_value "SECURE_LIST_APPROVE" }}</a> -->
         <a class="nav_button" href="/list-absent">{{ res_value "LIST_ABSENT" }}</a>
         {{ end }}
 
@@ -41,32 +42,37 @@
 {{ end }}
 
 {{ define "body" }}
-<table class="table_common">
-    <colgroup>
-        <col>
-        <col>
-        <col>
-        <col>
-    </colgroup>
+<!-- Обертка .table-wrapper активирует тени, скроллбары и скругления из Блока 3 styles.css -->
+<div class="table-wrapper scroll-x-y">
+    <table>
+        <colgroup>
+            <col style="width: 15%;">
+            <col style="width: 30%;">
+            <col style="width: 25%;">
+            <col style="width: 30%;">
+        </colgroup>
 
-    <thead>
-        <tr>
-            <th><a>{{ res_value "BIRTH_DATE" }}</a></th>
-            <th><a>{{ res_value "EMPLOYEE" }}</a></th>
-            <th><a>{{ res_value "POST" }}</a></th>
-            <th><a>{{ res_value "DEP_NAME" }}</a></th>
-        </tr>
-    </thead>
+        <thead>
+            <tr>
+                <!-- Пустые теги <a> удалены для правильного наследования цветов темы -->
+                <th>{{ res_value "BIRTH_DATE" }}</th>
+                <th style="text-align: left;">{{ res_value "EMPLOYEE" }}</th>
+                <th style="text-align: left;">{{ res_value "POST" }}</th>
+                <th style="text-align: left;">{{ res_value "DEP_NAME" }}</th>
+            </tr>
+        </thead>
 
-    <tbody>
-        {{ range .ListBD }}
-        <tr>
-            <td style="text-align: center;"><a>{{ .BirthDate }}</a></td>
-            <td style="text-align: left"><a>{{ .Employee }}</a></td>
-            <td style="text-align: left"><a>{{ .Post }}</a></td>
-            <td style="text-align: left"><a>{{ .DepName }}</a></td>
-        </tr>
-        {{ end }}
-    </tbody>
-</table>
+        <tbody>
+            {{ range .ListBD }}
+            <tr>
+                <!-- Инлайновое выравнивание оставлено, так как оно специфично для колонок -->
+                <td style="text-align: center;">{{ .BirthDate }}</td>
+                <td style="text-align: left;">{{ .Employee }}</td>
+                <td style="text-align: left;">{{ .Post }}</td>
+                <td style="text-align: left;">{{ .DepName }}</td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+</div>
 {{ end }}

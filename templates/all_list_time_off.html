@@ -6,54 +6,84 @@
 {{ define "info" }}{{ end }}
 
 {{ define "body" }}
-<div style="border-radius: 5px; border-bottom: 1px solid rgba(142, 142, 142, 0.3);">
-    <form style="margin: 2px; padding: 0px 16px" method="POST">
-        <label style="margin: 4px; font-size: 20px" for="flt_month">{{ res_value "PRINT_MONTH" }}</label>
-        <!-- Исправлено: добавлена точка к переменной и исправлен required -->
-        <input class="input_s" style="width: 154px" type="month" required autofocus name="flt_month" id="flt_month" minlength="3" value="{{ .FltMonth }}">
+<!-- Локальный стиль для компактной строки фильтра и статуса ожидания -->
+<style>
+    .filter-form {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin: 2px !important;
+        padding: 8px 16px !important;
+        background: none !important; /* Убираем тяжелый фон формы */
+        border: none !important;     /* Убираем рамку */
+    }
+    .status-pending {
+        color: var(--accent);
+        font-weight: 600;
+        font-size: 16px;
+    }
+</style>
 
-        <button type="submit" style="margin-left:12px">{{ res_value "FLT_MONTH" }}</button>
-        <div style="display:inline-block; border-radius: 5px"><a class="button" style="margin-left:12px;" href="/all_list_report?flt_month={{ .FltMonth }}">{{ res_value "PRINT_EXECUTE" }}</a></div>
+<!-- Панель фильтрации по месяцу -->
+<div style="border-radius: 5px; border-bottom: 1px solid var(--card-border);">
+    <form class="filter-form" method="POST">
+        <label style="font-size: 18px; font-weight: bold;" for="flt_month">{{ res_value "PRINT_MONTH" }}</label>
+        
+        <input class="input_s" style="width: 154px; margin: 0;" type="month" required autofocus name="flt_month" id="flt_month" minlength="3" value="{{ .FltMonth }}">
+
+        <!-- Применили новый стандарт кнопок .btn -->
+        <button type="submit" class="btn">{{ res_value "FLT_MONTH" }}</button>
+        
+        <!-- Ссылка на печать оформлена через ваш чистый класс .button (лишний div удален) -->
+        <a class="button" href="/all_list_report?flt_month={{ .FltMonth }}">{{ res_value "PRINT_EXECUTE" }}</a>
     </form>
 </div>
-<div class="table-scroll-800">
+
+<br>
+
+<!-- Подключаем серую сетку в 1px, зафиксированную шапку и тонкий зеленый/бордовый скроллбар -->
+<div class="table-wrapper scroll-x-y">
     <table>
         <colgroup>
-            <col><col><col><col><col><col><col><col>
+            <col style="width: 10%;"><col style="width: 12%;"><col style="width: 12%;">
+            <col style="width: 18%;"><col style="width: 15%;"><col style="width: 15%;">
+            <col style="width: 18%;"><col style="width: 10%;">
         </colgroup>
         <thead>
             <tr>
-                <th><a>{{ res_value "REG_DATE" }}</a></th>
-                <th><a>{{ res_value "TIME_OUT" }}</a></th>
-                <th><a>{{ res_value "TIME_IN" }}</a></th>
-                <th><a>{{ res_value "EMPLOYEE" }}</a></th>
-                <th><a>{{ res_value "POST" }}</a></th>
-                <th><a>{{ res_value "DEP_NAME" }}</a></th>
-                <th><a>{{ res_value "CAUSE"  }}</a></th>
-                <th><a>{{ res_value "HEAD_NAME" }}</a></th>
+                <th>{{ res_value "REG_DATE" }}</th>
+                <th>{{ res_value "TIME_OUT" }}</th>
+                <th>{{ res_value "TIME_IN" }}</th>
+                <th style="text-align: left;">{{ res_value "EMPLOYEE" }}</th>
+                <th style="text-align: left;">{{ res_value "POST" }}</th>
+                <th style="text-align: left;">{{ res_value "DEP_NAME" }}</th>
+                <th style="text-align: left;">{{ res_value "CAUSE"  }}</th>
+                <th style="text-align: left;">{{ res_value "HEAD_NAME" }}</th>
             </tr>
         </thead>
-        <tfoot></tfoot>
         <tbody>
-            <!-- Изменено на стандартный Go CamelCase -->
             {{ range .ListTimeOff }}
             <tr>
-                <td style="text-align: center"><a>{{ .EventDate }}</a></td>
-                <td style="text-align: center"><a>{{ .TimeOut }}</a></td>
-                <td style="text-align: center"><a>{{ .TimeIn }}</a></td>
-                <td><a>{{ .Employee }}</a></td>
-                <td><a>{{ .Post }}</a></td>
-                <td><a>{{ .DepName }}</a></td>
-                <td><a>{{ .Cause }}</a></td>
-                <!-- Проверка согласующего (если строка не пустая и не пробел) -->
+                <td style="text-align: center;">{{ .EventDate }}</td>
+                <td style="text-align: center;">{{ .TimeOut }}</td>
+                <td style="text-align: center;">{{ .TimeIn }}</td>
+                <td>{{ .Employee }}</td>
+                <td>{{ .Post }}</td>
+                <td>{{ .DepName }}</td>
+                <td>{{ .Cause }}</td>
+                
+                <!-- Проверка согласующего руководителя -->
                 {{ if and .Head (ne .Head " ") }}
-                <td><a>{{ .Head }}</a></td>
+                <td>{{ .Head }}</td>
                 {{ else }}
-                <td><a style="color: hotpink; font-size: 18px; font-weight: 600">{{ res_value "ON_APPROVING" }}</a></td>
+                <td>
+                    <!-- Убран хардкод hotpink, завязан на переменную темы через класс -->
+                    <span class="status-pending">{{ res_value "ON_APPROVING" }}</span>
+                </td>
                 {{ end }}
             </tr>
             {{ end }}
-        </tbody> <!-- Исправлен закрывающий тег -->
+        </tbody>
     </table>
 </div>
 {{ end }}

@@ -6,36 +6,67 @@
 {{ define "info" }}{{ end }}
 
 {{ define "body" }}
-<!-- ОБЯЗАТЕЛЬНО добавляем enctype -->
-<form method="POST" enctype="multipart/form-data">
+<!-- Локальный стиль для ограничения максимальной ширины текстовых полей формы -->
+<style>
+    .wide-form .field-group {
+        margin-top: 14px;
+    }
+    .wide-form label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 6px;
+        font-size: 16px;
+    }
+    /* Унифицируем ширину всех элементов формы создания сообщения */
+    .wide-form .input_s,
+    .wide-form input[type="file"],
+    .wide-form textarea {
+        width: 100% !important;
+        max-width: 660px !important;
+        margin-left: 0 !important;
+    }
+    .wide-form h2 {
+        margin: 0 0 16px 0;
+        font-size: 22px;
+        color: var(--fg);
+    }
+</style>
+
+<!-- Форма создания новости с поддержкой отправки файлов -->
+<form method="POST" enctype="multipart/form-data" class="wide-form">
     <div>
-        <a style="font-size: 24px; font-weight: bold">{{ res_value "ADD_MESSAGE" }}</a>
+        <h2>{{ res_value "ADD_MESSAGE" }}</h2>
     </div>
     
+    <!-- Блок полей для кадровой службы (HR) -->
     {{ if .IsHR }}
-    <div style="margin-top: 12px;">
-        <label for="photo_file" style="display: block; font-weight: 500; margin-bottom: 4px;">{{ res_value "PHOTO_FILE" }}</label>
-        <!-- Изменили тип на file и ограничили выбор только картинками -->
-        <input type="file" id="photo_file" name="photo_file" accept="image/*" style="width: 100%; max-width: 660px; padding: 8px 8px; margin-left: 0px;">
+    <div class="field-group">
+        <label for="photo_file">{{ res_value "PHOTO_FILE" }}</label>
+        <!-- Активирует dashed-рамку и темную/светлую кнопку выбора из styles.css -->
+        <input type="file" id="photo_file" name="photo_file" accept="image/*">
     </div>
 
-    <div style="margin-top: 12px;">
-        <label for="photo_fio" style="display: block; font-weight: 500; margin-bottom: 4px;">{{ res_value "PHOTO_FIO" }}</label>
-        <input type="text" class="input_s" name="photo_fio" id="photo_fio" style="width: 100%; max-width: 660px; padding: 8px 8px; margin-left: 0px;">
+    <div class="field-group">
+        <label for="photo_fio">{{ res_value "PHOTO_FIO" }}</label>
+        <input type="text" class="input_s" name="photo_fio" id="photo_fio" autocomplete="on">
     </div>
 
-    <div style="margin-top: 12px;">
-        <label for="photo_post" style="display: block; font-weight: 500; margin-bottom: 4px;">{{ res_value "PHOTO_POST" }}</label>
-        <input type="text" class="input_s" name="photo_post" id="photo_post" style="width: 100%; max-width: 660px; padding: 8px 8px; margin-left: 0px;">
+    <div class="field-group">
+        <label for="photo_post">{{ res_value "PHOTO_POST" }}</label>
+        <input type="text" class="input_s" name="photo_post" id="photo_post" autocomplete="on">
     </div>
     {{ end }}
-    <div style="margin-top: 12px;">
-        <label for="new_message" style="display: block; font-weight: 500; margin-bottom: 4px;">{{ res_value "MESSAGE" }}</label>
-        <textarea class="textarea" name="new_message" id="new_message" rows="10" cols="80" style="width: 100%; max-width: 660px;"></textarea>
+
+    <!-- Основной текст сообщения -->
+    <div class="field-group">
+        <label for="new_message">{{ res_value "MESSAGE" }}</label>
+        <!-- Класс .textarea удален, тег textarea стилизуется напрямую из styles.css -->
+        <textarea name="new_message" id="new_message" rows="10" cols="80"></textarea>
     </div>
     
-    <div style="margin-top: 16px;">
-        <button type="submit">{{ res_value "SAVE" }}</button>
+    <div style="margin-top: 20px;">
+        <!-- Применили универсальный стандарт кнопок .btn из Блока 2 -->
+        <button type="submit" class="btn">{{ res_value "SAVE" }}</button>
     </div>
 </form>
 {{ end }}

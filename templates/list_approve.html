@@ -6,73 +6,102 @@
 {{ define "info" }}{{ end }}
 
 {{ define "body" }}
-<table class="table_common">
-    <colgroup>
-        <col><col><col><col><col><col><col><col>
-    </colgroup>
-    <thead>
-        <tr>
-            <th><a>{{ res_value "REG_DATE" }}</a></th>
-            <th><a>{{ res_value "TIME_OUT" }}</a></th>
-            <th><a>{{ res_value "TIME_IN" }}</a></th>
-            <th><a>{{ res_value "EMPLOYEE" }}</a></th>
-            <th><a>{{ res_value "POST" }}</a></th>
-            <th><a>{{ res_value "DEP_NAME" }}</a></th>
-            <th><a>{{ res_value "CAUSE" }}</a></th>
-            <th><a>{{ res_value "STATUS" }}</a></th>
-        </tr>
-    </thead>
-    <tfoot></tfoot>
-    <tbody>
-        {{ range .ListToApprove }}
-        <tr>
-            <td style="text-align: center"><a>{{ .EventDate }}</a></td>
-            <td style="text-align: center"><a>{{ .TimeOut }}</a></td>
-            <td style="text-align: center"><a>{{ .TimeIn }}</a></td>
-            <td><a>{{ .Employee }}</a></td>
-            <td><a>{{ .Post }}</a></td>
-            <td><a>{{ .DepName }}</a></td>
-            <td><a>{{ .Cause }}</a></td>
-            
-            <!-- Проверка статуса: если статус равен 0 или 3 — выводим ЦЕЛЬНЫЕ БОЛЬШИЕ иконки действий -->
-            {{ if or (eq .Status 0) (eq .Status 3) }}
-            <td style="text-align: center; vertical-align: middle;">
-                <div style="display: flex; gap: 16px; justify-content: center; align-items: center;">
-                    
-                    <!-- Чистая большая иконка одобрения. При клике отправляет форму через JS -->
-                    <a href="javascript:void(0)" onclick="document.getElementById('form-approve-{{ .ID }}').submit();" style="border: none !important; background: none !important; padding: 0 !important; margin: 0 !important; display: inline-block;">
-                        <img class="ok" src="/static/img/ok.png" style="border: none !important; opacity: 1 !important; filter: none !important; display: block; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'" title="{{ res_value "APPROVE" }}">
-                    </a>
+<!-- Локальные стили для красивых статусов и анимации иконок действий -->
+<style>
+    /* Статусы подстраиваются под светлую и темную палитру */
+    .status-approved {
+        color: var(--btn-bg); /* Мягкий зеленый */
+        font-weight: 600;
+        font-size: 16px;
+    }
+    .status-refused {
+        color: #e63946; /* Аккуратный красный (как кнопка удаления) */
+        font-weight: 600;
+        font-size: 16px;
+    }
+    /* Чистая CSS анимация для иконок без использования JS-событий onmouseover */
+    .action-icon {
+        border: none !important;
+        display: block;
+        transition: transform 0.2s ease, filter 0.2s ease;
+        cursor: pointer;
+    }
+    .action-icon:hover {
+        transform: scale(1.18); /* Плавное увеличение на 18% */
+    }
+</style>
 
-                    <!-- Чистая большая иконка отказа -->
-                    <a href="javascript:void(0)" onclick="document.getElementById('form-refuse-{{ .ID }}').submit();" style="border: none !important; background: none !important; padding: 0 !important; margin: 0 !important; display: inline-block;">
-                        <img class="cancel" src="/static/img/cancel.png" style="border: none !important; opacity: 1 !important; filter: none !important; display: block; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'" title="{{ res_value "REFUSE" }}">
-                    </a>
+<!-- Активируем нашу новую серую сетку в 1px и скроллбары -->
+<div class="table-wrapper scroll-x-y">
+    <table>
+        <colgroup>
+            <col style="width: 10%;"><col style="width: 12%;"><col style="width: 12%;">
+            <col style="width: 18%;"><col style="width: 15%;"><col style="width: 15%;">
+            <col style="width: 18%;"><col style="width: 10%;">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>{{ res_value "REG_DATE" }}</th>
+                <th>{{ res_value "TIME_OUT" }}</th>
+                <th>{{ res_value "TIME_IN" }}</th>
+                <th style="text-align: left;">{{ res_value "EMPLOYEE" }}</th>
+                <th style="text-align: left;">{{ res_value "POST" }}</th>
+                <th style="text-align: left;">{{ res_value "DEP_NAME" }}</th>
+                <th style="text-align: left;">{{ res_value "CAUSE" }}</th>
+                <th>{{ res_value "STATUS" }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range .ListToApprove }}
+            <tr>
+                <td style="text-align: center;">{{ .EventDate }}</td>
+                <td style="text-align: center;">{{ .TimeOut }}</td>
+                <td style="text-align: center;">{{ .TimeIn }}</td>
+                <td>{{ .Employee }}</td>
+                <td>{{ .Post }}</td>
+                <td>{{ .DepName }}</td>
+                <td>{{ .Cause }}</td>
+                
+                <!-- Проверка статуса: если 0 или 3 — выводим кнопки одобрения/отказа -->
+                {{ if or (eq .Status 0) (eq .Status 3) }}
+                <td style="text-align: center; vertical-align: middle;">
+                    <div style="display: flex; gap: 14px; justify-content: center; align-items: center;">
+                        
+                        <!-- Кнопка одобрения (JS onmouseover/onmouseout полностью удален) -->
+                        <a href="javascript:void(0)" onclick="document.getElementById('form-approve-{{ .ID }}').submit();" style="display: inline-block; text-decoration: none;">
+                            <img class="ok action-icon" src="/static/img/ok.png" alt="OK" title="{{ res_value "APPROVE" }}">
+                        </a>
 
-                    <!-- Скрытые POST-формы, которые не видны на экране, но отправляют ID в Go -->
-                    <form id="form-approve-{{ .ID }}" method="POST" action="/approve-time-off" style="display: none;">
-                        <input type="hidden" name="id" value="{{ .ID }}">
-                    </form>
-                    <form id="form-refuse-{{ .ID }}" method="POST" action="/refuse-time-off" style="display: none;">
-                        <input type="hidden" name="id" value="{{ .ID }}">
-                    </form>
-                    
-                </div>
-            </td>
-            {{ else }}
-                <!-- Если статус уже обработан -->
-                {{ if eq .Status 1 }}
-                <td style="font-size: 18px; text-align: center; vertical-align: middle;">
-                    <a style="color: teal; font-weight: 600;">{{ res_value "APPROVED" }}&emsp;</a>
+                        <!-- Кнопка отказа -->
+                        <a href="javascript:void(0)" onclick="document.getElementById('form-refuse-{{ .ID }}').submit();" style="display: inline-block; text-decoration: none;">
+                            <img class="cancel action-icon" src="/static/img/cancel.png" alt="Cancel" title="{{ res_value "REFUSE" }}">
+                        </a>
+
+                        <!-- Скрытые POST-формы передачи ID в Go -->
+                        <form id="form-approve-{{ .ID }}" method="POST" action="/approve-time-off" style="display: none;">
+                            <input type="hidden" name="id" value="{{ .ID }}">
+                        </form>
+                        <form id="form-refuse-{{ .ID }}" method="POST" action="/refuse-time-off" style="display: none;">
+                            <input type="hidden" name="id" value="{{ .ID }}">
+                        </form>
+                        
+                    </div>
                 </td>
                 {{ else }}
-                <td style="font-size: 18px; text-align: center; vertical-align: middle;">
-                    <a style="color: hotpink; font-weight: 600;">{{ res_value "REFUSED" }}</a>
-                </td>
+                    <!-- Обработанные текстовые статусы, завязанные на системную палитру -->
+                    {{ if eq .Status 1 }}
+                    <td style="text-align: center; vertical-align: middle;">
+                        <span class="status-approved">{{ res_value "APPROVED" }}</span>
+                    </td>
+                    {{ else }}
+                    <td style="text-align: center; vertical-align: middle;">
+                        <span class="status-refused">{{ res_value "REFUSED" }}</span>
+                    </td>
+                    {{ end }}
                 {{ end }}
+            </tr>
             {{ end }}
-        </tr>
-        {{ end }}
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>
 {{ end }}

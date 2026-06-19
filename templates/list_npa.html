@@ -2,50 +2,104 @@
 
 {{ define "main_title" }} {{ res_value "LIST_NPA" }} {{ end }}
 
-<!-- Пустая заглушка для навигации -->
 {{ define "navigate" }}{{ end }}
 
 {{ define "body" }}
-<form>
-    <!-- Переводим цикл со стиля Flask (Jinja2) на чистый Go html/template -->
+<!-- Локальные стили для списка документов и компактной формы босса -->
+<style>
+    .npa-list {
+        /* ИСПРАВЛЕНО: Вернули комфортный отступ сверху, чтобы список не прилипал к заголовку */
+        padding: 16px 4px 4px 4px; 
+    }
+    .npa-link {
+        display: inline-block;
+        text-align: left;
+        font-size: 18px;
+        
+        /* ИСПРАВЛЕНО: Жестко принуждаем буквы стать мягкими темно-серыми в светлой теме */
+        color: #555555 !important; 
+        
+        /* Расстояние между строками (оставили отличный компактный зазор) */
+        margin-bottom: 4px; 
+        padding: 2px 8px; 
+        border-radius: 4px;
+        
+        text-decoration: none;
+        transition: color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    }
+    .npa-link:hover {
+        /* При наведении цвет букв плавно становится ярко-зеленым или алым */
+        /* color: var(--btn-bg) !important;  */
+        color: var(--link-hover-fg) !important; 
+        background-color: var(--card-bg); 
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12); 
+    }
+    .boss-filter-form {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin: 12px 2px 2px 2px !important;
+        padding: 8px 16px !important;
+        background: none !important; 
+        border: none !important;     
+    }
+    
+    /* Переключение цвета букв на правильный светлый тон в темной теме */
+    [data-theme="dark"] .npa-link {
+        color: var(--fg) !important; 
+    }
+    [data-theme="dark"] .npa-link:hover {
+        color: var(--accent) !important; 
+    }
+</style>
+
+<!-- Тег <form> заменен на div, чтобы глобальные стили форм не закрашивали список -->
+<div class="npa-list">
     {{ range .ListNpa }}
     <div>
-        <a class="track-click"
+        <!-- Класс .track-click заменен на комплексный .npa-link.track-click -->
+        <a class="npa-link track-click"
            data-path="{{ .Path }}"
            data-num="{{ .Num }}"
            data-name="{{ .Name }}"
-           style="display: block; text-align: left; font-size: 19px; margin-bottom: 12px"
            href="{{ .Path }}">{{ .Num }}.&nbsp;{{ .Name }}</a>
     </div>
     {{ end }}
-</form>
+</div>
 
+<!-- Панель выгрузки отчетов для Руководства -->
 {{ if .IsBoss }}
-<hr>
-<div style="border-radius: 5px; border-bottom: 1px solid rgba(142, 142, 142, 0.3);">
-    <form action="/uploads-use-npa" method="POST" style="margin: 12px 2px 2px 2px; padding: 0px 16px">
-        <label style="font-size: 19px;" for="flt_year">{{ res_value "PRINT_YEAR" }}:&nbsp;</label>
+<hr style="border: 0; border-top: 1px solid var(--card-border); margin: 16px 0;">
+
+<div style="border-radius: 5px; border-bottom: 1px solid var(--card-border);">
+    <!-- Класс .boss-filter-form спасает строку от раздувания -->
+    <form action="/uploads-use-npa" method="POST" class="boss-filter-form">
         
-        <!-- Используем .CurrentYear из переданной структуры бэкенда -->
-        <input class="input_s" style="width: 80px;" 
-               type="number" min="2025" max="{{ .CurrentYear }}" step="1" maxlength="4"
+        <!-- ИСПРАВЛЕНО: Сделали само слово ГОД менее ярким (серым), а не число -->
+        <label style="font-size: 18px; font-weight: bold;" for="flt_year">
+            <span style="color: #666; font-weight: 500;">{{ res_value "PRINT_YEAR" }}:</span>&nbsp;
+        </label>
+        
+        <!-- Возвращено в исходный рабочий вид -->
+        <input class="input_s" style="width: 80px; margin: 0;" 
+               type="number" min="2024" max="{{ .CurrentYear }}" step="1" maxlength="4"
                value="{{ .CurrentYear }}" name="flt_year" id="flt_year" required>
                
-        <button type="submit" class="button" style="margin-left:12px;">
+        <button type="submit" class="btn">
             {{ res_value "PRINT_EXECUTE" }}
         </button>
     </form>
 </div>
+
 {{ end }}
 
+<!-- JS-скрипт аналитики оставлен в исходном идеальном состоянии -->
 <script>
-    // Безопасно передаем строковые переменные из Go структуры контекста
     const userId = "{{ .FIO }}";  
     const depName = "{{ .DepName }}";  
 
     document.querySelectorAll('.track-click').forEach(link => {
         link.addEventListener('click', function (e) {
-            // Отправляем аналитику клика на бэкенд Go
             fetch('/log-click', {
                 method: 'POST',
                 headers: {
@@ -55,7 +109,7 @@
                     user_name: userId,
                     dep_name: depName,
                     path: this.dataset.path,
-                    num: parseInt(this.dataset.num, 10), // приводим к числу для строгого Go JSON
+                    num: parseInt(this.dataset.num, 10), 
                     name: this.dataset.name,
                     timestamp: new Date().toISOString()
                 })

@@ -11,86 +11,120 @@
 {{ define "info" }}{{ end }}
 
 {{ define "body" }}
+<!-- Локальный стиль специально для сброса стилей микро-формы удаления в таблице и кнопки -->
+<style>
+    .inline-form-del {
+        display: inline !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: none !important;
+        border: none !important;
+    }
+    .status-pending {
+        color: var(--accent);
+        font-weight: 600;
+    }
+    /* Стилизация кнопки удаления в стиле вашей дизайн-системы */
+    .btn-danger {
+        background-color: #e63946;
+        color: #fff;
+        border: 1px solid #d62828;
+        padding: 3px 12px;
+        font-size: 13px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: transform 0.1s ease, background-color 0.2s ease;
+    }
+    .btn-danger:hover {
+        background-color: #d62828;
+        transform: translateY(1px);
+    }
+</style>
+
+<!-- Форма подачи заявки -->
 <form method="POST" action="/time-off">
     <div class="field">
         <label for="date_out">{{ res_value "TIME_OUT" }}</label>
-        <input class="input_s" style="width: 220px" type="datetime-local" id="date_out" name="date_out">
+        <input class="input_s" type="datetime-local" id="date_out" name="date_out">
     </div>
     <div class="field">
         <label for="date_in">{{ res_value "TIME_IN" }}</label>
-        <input class="input_s" style="width: 220px" type="datetime-local" id="date_in" name="date_in">
+        <input class="input_s" type="datetime-local" id="date_in" name="date_in">
     </div>
     <div class="field">
         <label for="cause">{{ res_value "CAUSE" }}</label>
-        <input class="input_s" type="text" id="cause" name="cause" maxlength="512" minlength="12" style="max-width: 32%; width: 480px">
+        <!-- Инлайновые конфликты ширины удалены, ширина контролируется классовем .input_s / styles.css -->
+        <input class="input_s" type="text" id="cause" name="cause" maxlength="512" minlength="12">
     </div>
     
-    <br />
-    <button type="submit" name="edit_parms">{{ res_value "SAVE" }}</button>
-    <br />
+    <br>
+    <!-- Использован ваш новый стандарт кнопок из Блока 2 -->
+    <button type="submit" class="btn" name="edit_parms">{{ res_value "SAVE" }}</button>
+    <br>
 </form>
 
-<br><br>
-<hr style="border: 0; border-top: 1px solid #ccc; margin: 18px 0;">
-<br>
+<hr style="border: 0; border-top: 1px solid var(--card-border); margin: 5px 0;">
 
-<table class="table_common">
-    <thead>
-        <tr>
-            <th><a>{{ res_value "REG_DATE" }}</a></th>
-            <th><a>{{ res_value "TIME_OUT" }}</a></th>
-            <th><a>{{ res_value "TIME_IN" }}</a></th>
-            <th><a>{{ res_value "AGREE_HEAD" }}</a></th>
-            <th><a>{{ res_value "CAUSE" }}</a></th>
-            <th><a>{{ res_value "STATUS" }}</a></th>
-            <th><a>{{ res_value "ACTION" }}</a></th>
-        </tr>
-    </thead>
-    <tbody>
-        {{ range .ListTimeOff }}
-        <tr>
-            <td style="text-align: center;"><a>{{ .EventDate }}</a></td>
-            <td style="text-align: center;"><a>{{ .TimeOut }}</a></td>
-            <td style="text-align: center;"><a>{{ .TimeIn }}</a></td>
-            <td><a>{{ .Head }}</a></td>
-            <td><a>{{ .Cause }}</a></td>
-            <td style="text-align: center;">
-                {{ if eq .Status 2 }}
-                    <img src="/static/img/refuse-1.png" class="img-logo">
-                {{ else if eq .Status 1 }}
-                    <img src="/static/img/approved-3.png" class="img-logo">
-                {{ else }}
-                    <a style="color: hotpink; font-weight: 600">{{ res_value "ON_APPROVING" }}</a>
-                {{ end }}
-            </td>
+<!-- ТАБЛИЦА ИСТОРИИ ЗАЯВОК -->
+<div class="table-wrapper scroll-x-y">
+    <table>
+        <thead>
+            <tr>
+                <th>{{ res_value "REG_DATE" }}</th>
+                <th>{{ res_value "TIME_OUT" }}</th>
+                <th>{{ res_value "TIME_IN" }}</th>
+                <th style="text-align: left;">{{ res_value "AGREE_HEAD" }}</th>
+                <th style="text-align: left;">{{ res_value "CAUSE" }}</th>
+                <th>{{ res_value "STATUS" }}</th>
+                <th>{{ res_value "ACTION" }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range .ListTimeOff }}
+            <tr>
+                <td style="text-align: center;">{{ .EventDate }}</td>
+                <td style="text-align: center;">{{ .TimeOut }}</td>
+                <td style="text-align: center;">{{ .TimeIn }}</td>
+                <td>{{ .Head }}</td>
+                <td>{{ .Cause }}</td>
+                <td style="text-align: center;">
+                    {{ if eq .Status 2 }}
+                        <img src="/static/img/refuse-1.png" class="img-logo" alt="Refused">
+                    {{ else if eq .Status 1 }}
+                        <img src="/static/img/approved-3.png" class="img-logo" alt="Approved">
+                    {{ else }}
+                        <!-- Убран хардкод хотпинка, завязан на переменную темы -->
+                        <span class="status-pending">{{ res_value "ON_APPROVING" }}</span>
+                    {{ end }}
+                </td>
 
-            <!-- Логика удаления через безопасный POST-запрос -->
-            <td style="text-align: center;">
-                {{ if or (lt .CntDays 2) (ne .Status 1) }}
-                    <!-- Каждая кнопка теперь — это отдельная маленькая форма -->
-                    <form method="POST" action="/del-from-list-time-off" style="margin: 0; padding: 0;">
-                        <!-- Передаем ID скрытым полем -->
-                        <input type="hidden" name="id" value="{{ .ID }}">
-                        <button class="button_red" type="submit" style="margin: 0px; padding: 3px 12px; font-size: 14px; border: none; cursor: pointer;">
-                            {{ res_value "REMOVE" }}
-                        </button>
-                    </form>
-                {{ else }}
-                    <img src="/static/img/flower.png" class="img-logo">
-                {{ end }}
-            </td>
+                <!-- Безопасное удаление -->
+                <td style="text-align: center;">
+                    {{ if or (lt .CntDays 2) (ne .Status 1) }}
+                        <!-- Класс .inline-form-del спасает ячейку от раздувания формы -->
+                        <form method="POST" action="/del-from-list-time-off" class="inline-form-del">
+                            <input type="hidden" name="id" value="{{ .ID }}">
+                            <button class="btn-danger" type="submit">
+                                {{ res_value "REMOVE" }}
+                            </button>
+                        </form>
+                    {{ else }}
+                        <img src="/static/img/flower.png" class="img-logo" alt="Icon">
+                    {{ end }}
+                </td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+</div>
 
-        </tr>
-        {{ end }}
-    </tbody>
-</table>
+<!-- Идеально написанный JS-скрипт перескоков фокуса дат оставлен без изменений -->
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const dateOut = document.getElementById('date_out');
         const dateIn = document.getElementById('date_in');
         const causeInput = document.getElementById('cause');
 
-        // 1. Настройка для ПЕРВОГО поля даты (перескок на второе поле)
         if (dateOut) {
             dateOut.addEventListener('input', function(e) {
                 if (e.target.value && e.target.value.length === 16) {
@@ -98,7 +132,6 @@
                         dateOut.blur();
                         if (dateIn) {
                             dateIn.focus();
-                            // Трюк: пробуем сразу открыть календарь второго поля, если браузер поддерживает showPicker
                             if (typeof dateIn.showPicker === "function") {
                                 try { dateIn.showPicker(); } catch(err) {}
                             }
@@ -108,14 +141,13 @@
             });
         }
 
-        // 2. Настройка для ВТОРОГО поля даты (перескок на причину)
         if (dateIn) {
             dateIn.addEventListener('input', function(e) {
                 if (e.target.value && e.target.value.length === 16) {
                     setTimeout(() => {
                         dateIn.blur();
                         if (causeInput) {
-                            causeInput.focus(); // Переносим курсор в причину, закрывая календарь
+                            causeInput.focus();
                         }
                     }, 150);
                 }
@@ -123,6 +155,4 @@
         }
     });
 </script>
-
-
 {{ end }}

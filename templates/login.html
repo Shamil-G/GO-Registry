@@ -2,36 +2,89 @@
 
 {{ define "main_title" }} {{ res_value "LOGIN_PAGE" }} {{ end }}
 
-<!-- Пустая заглушка для навигации -->
 {{ define "navigate" }}{{ end }}
 
 {{ define "body" }}
-<!-- Верхний блок теперь чистый, без всплывающей ошибки -->
-<div class="title_message"></div>
+<!-- Локальный стиль для красивой центрированной формы авторизации -->
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 10px;
+    }
+    .login-form {
+        width: 100%;
+        max-width: 340px; /* Делаем форму авторизации аккуратной и узкой */
+        padding: 30px 24px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        text-align: center;
+    }
+    .login-form .input-group {
+        margin-bottom: 14px;
+    }
+    .login-form .input_s {
+        width: 100% !important; /* Инпуты растягиваются на всю ширину формы */
+        margin: 0 !important;
+    }
+    .login-form .btn {
+        width: 100%; /* Кнопка "Войти" становится большой и удобной */
+        height: 38px;
+        font-size: 16px;
+        margin-top: 10px;
+    }
+    /* Стильный и безопасный для темной темы блок вывода ошибок */
+    .error-box {
+        color: #e63946; /* Приятный сочный красный цвет */
+        font-size: 16px;
+        font-weight: bold;
+        background-color: rgba(230, 57, 70, 0.1); /* Легкая прозрачная красная подложка */
+        padding: 10px;
+        border-radius: 6px;
+        margin-top: 16px;
+        border: 1px solid rgba(230, 57, 70, 0.2);
+    }
+    .info-box {
+        font-size: 16px;
+        font-weight: bold;
+        color: var(--fg);
+        margin-top: 20px;
+        text-align: left;
+    }
+</style>
 
-<form class="form_body" method="POST" action="/login">
-    <div>
-        <input class="input_s" style="margin-left:0px" type="text" name="username" placeholder="{{ res_value "LOGIN_NAME" }}" autocomplete="off">
-    </div>
-    <div style="margin-top: 9px">
-        <input class="input_s" style="margin-left:0px" type="password" name="password" placeholder="{{ res_value "INSERT_PASSWORD" }}" autocomplete="new-password">
-    </div>
-    
-    <button style="margin-top:16px" type="submit">{{ res_value "LOGIN" }}</button>
-    
-    <!-- !!! ПЕРЕНЕСЛИ БЛОК ОШИБКИ СЮДА — ПОД КНОПКУ РЕГИСТРАЦИИ !!! -->
-    {{ if .Error }}
-    <div class="title_message" style="margin-top: 16px; text-align: center;">
-        <ul class="flashes" style="margin: 0; padding: 0; list-style: none;">
-            <li class="td_value_bold" style="color: #222222; font-size: 19px; font-weight: bold;"> {{ .Error }} </li>
-        </ul>
-    </div>
-    {{ end }}
-    
-    <div style="text-align: left; margin-top: 24px">
-        {{ if .Info }}
-        <a style="font-size: 19px; font-weight: bold;">{{ .Info }}</a>
+<div class="login-container">
+    <!-- Класс .login-form превращает форму в красивую монолитную карточку -->
+    <form class="login-form" method="POST" action="/login">
+        
+        <!-- Поле ввода Логина -->
+        <div class="input-group">
+            <input class="input_s" type="text" name="username" placeholder="{{ res_value "LOGIN_NAME" }}" autocomplete="off" required>
+        </div>
+        
+        <!-- Поле ввода Пароля -->
+        <div class="input-group">
+            <input class="input_s" type="password" name="password" placeholder="{{ res_value "INSERT_PASSWORD" }}" autocomplete="new-password" required>
+        </div>
+        
+        <!-- Большая красивая кнопка авторизации -->
+        <button class="btn" type="submit">{{ res_value "LOGIN" }}</button>
+        
+        <!-- ВЫВОД ОШИБКИ (Полная адаптация под светлую и темную темы) -->
+        {{ if .Error }}
+        <div class="error-box">
+            {{ .Error }}
+        </div>
         {{ end }}
-    </div>
-</form>
+        
+        <!-- Информационный блок -->
+        {{ if .Info }}
+        <div class="info-box">
+            <p style="margin: 0;">{{ .Info }}</p>
+        </div>
+        {{ end }}
+        
+    </form>
+</div>
 {{ end }}

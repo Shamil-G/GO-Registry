@@ -6,47 +6,59 @@
 {{ define "info" }}{{ end }}
 
 {{ define "body" }}
-<table class="table_common">
-    <colgroup>
-        <col>
-        <col>
-        <col>
-        <col>
-        <col>
-        <col>
-        <col>
-        <col>
-    </colgroup>
-    <thead>
-        <tr>
-            <th style="font-size:16px;"><a>{{ res_value "REG_DATE" }}</a></th>
-            <th style="font-size:16px;width: 8%"><a>{{ res_value "TIME_OUT" }}</a></th>
-            <th style="font-size:16px;"><a>{{ res_value "TIME_IN" }}</a></th>
-            <th style="font-size:16px;"><a>{{ res_value "EMPLOYEE" }}</a></th>
-            <th style="font-size:16px;"><a>{{ res_value "POST" }}</a></th>
-            <th style="font-size:16px;"><a>{{ res_value "DEP_NAME" }}</a></th>
-            <th style="font-size:16px;"><a>{{ res_value "CAUSE" }}</a></th>
-            <th style="font-size:16px;"><a>{{ res_value "HEAD_NAME" }}</a></th>
-        </tr>
-    </thead>
-    <tfoot></tfoot>
-    <tbody>
-        {{ range .ListAbsent }}
-        <tr>
-            <td style="text-align: center"><a>{{ .EventDate }}</a></td>
-            <td style="text-align: center"><a>{{ .TimeOut }}</a></td>
-            <td style="text-align: center"><a>{{ .TimeIn }}</a></td>
-            <td><a>{{ .Employee }}</a></td>
-            <td><a>{{ .Post }}</a></td>
-            <td><a>{{ .DepName }}</a></td>
-            <td><a>{{ .Cause }}</a></td>
-            {{ if .Head }}
-                <td><a>{{ .Head }}</a></td>
-            {{ else }}
-                <td><a  style="color: hotpink; font-weight: 600">{{ res_value "NOT_APPROVED" }}</a></td>
+<!-- Локальный стиль для статуса отказа/неутверждения -->
+<style>
+    .status-unapproved {
+        color: #e63946; /* Аккуратный красный цвет, одинаковый для всех отказов */
+        font-weight: 600;
+        font-size: 15px;
+    }
+</style>
+
+<!-- Активируем нашу серую сетку в 1px, фиксацию шапки при прокрутке и кастомный 4px скроллбар -->
+<div class="table-wrapper scroll-x-y">
+    <table>
+        <colgroup>
+            <col style="width: 10%;"><col style="width: 12%;"><col style="width: 12%;">
+            <col style="width: 18%;"><col style="width: 15%;"><col style="width: 15%;">
+            <col style="width: 18%;"><col style="width: 10%;">
+        </colgroup>
+        <thead>
+            <tr>
+                <!-- Инлайновые font-size удалены, размер 16px наследуется из styles.css -->
+                <th>{{ res_value "REG_DATE" }}</th>
+                <th>{{ res_value "TIME_OUT" }}</th>
+                <th>{{ res_value "TIME_IN" }}</th>
+                <th style="text-align: left;">{{ res_value "EMPLOYEE" }}</th>
+                <th style="text-align: left;">{{ res_value "POST" }}</th>
+                <th style="text-align: left;">{{ res_value "DEP_NAME" }}</th>
+                <th style="text-align: left;">{{ res_value "CAUSE" }}</th>
+                <th style="text-align: left;">{{ res_value "HEAD_NAME" }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range .ListAbsent }}
+            <tr>
+                <td style="text-align: center;">{{ .EventDate }}</td>
+                <td style="text-align: center;">{{ .TimeOut }}</td>
+                <td style="text-align: center;">{{ .TimeIn }}</td>
+                <td>{{ .Employee }}</td>
+                <td>{{ .Post }}</td>
+                <td>{{ .DepName }}</td>
+                <td>{{ .Cause }}</td>
+                
+                <!-- Проверка наличия согласующего руководителя -->
+                {{ if .Head }}
+                    <td>{{ .Head }}</td>
+                {{ else }}
+                    <td>
+                        <!-- Убран хардкод hotpink, завязан на системную палитру через класс -->
+                        <span class="status-unapproved">{{ res_value "NOT_APPROVED" }}</span>
+                    </td>
+                {{ end }}
+            </tr>
             {{ end }}
-        </tr>
-        {{ end }}
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>
 {{ end }}
