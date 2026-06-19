@@ -167,7 +167,7 @@ header {
 
 article {
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: 1fr minmax(auto, 35%);
     grid-area: article; /* задаем имя элемента */
     grid-template-areas: "article_body article_info";
     border-radius: 5px;
