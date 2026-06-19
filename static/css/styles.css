@@ -1,0 +1,966 @@
+:root[data-theme="color"] {
+    --bg: #e3f6e4; 
+    --fg: #0f2f0f; 
+    --accent: #2fa84f; 
+    --card-bg: #e8f8ea; 
+    --card-border: #b8e2c2; 
+    --title-bg: #cfefd5; 
+
+    --root-border: 1px solid rgba(142, 142, 142, 0.3);
+    --nav-btn-bg: rgba(255, 255, 255, 0.15); 
+    --nav-btn-border: rgba(0, 0, 0, 0.15);
+    --nav-btn-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    
+    /* ЦВЕТА КНОПОК ДЛЯ СВЕТЛОЙ ТЕМЫ */
+    --btn-bg-init: #e8f5e9;    /* Нежный зеленоватый стартовый фон */
+    --btn-fg-init: #2e7d32;    /* Зеленый текст */
+    --btn-border-init: #c8e6c9;/* Салатовая рамка */
+    
+    --btn-bg: #4caf50;         /* Насыщенный зеленый при наведении */
+    --btn-border: #388e3c;     /* Четкая рамка при наведении */
+    --btn-fg: #ffffff;         /* Белый текст при наведении */
+    --btn-bg-active: #2e7d32;  /* Темно-зеленый при клике */
+
+    --button-background-color: #fffce8; 
+    --button-color: #0f2f0f;
+    --input-background: #fffef4;
+    --table-bg: #e3f6e4;
+    --table-border: 1px solid grey;
+    --table-filter: #d6f2d8;
+    --table-header-bg: #c9edcd; 
+    --table-header-fg: #0f2f0f;
+    --table-row-hover: #e8f8ea;
+    --table-divider: 1px solid grey; 
+    --table-stick: #c9edcd;
+    --clickable-row-selected: #d0ebff;
+    --tbody-tr-even: #fffce8;
+    --tr-active-row: #d0ebff;
+    --tr-hover: #d9f0ff;
+    --tab-background: #96cc98;
+    --tab-background-active: #d0ebff;
+    --tab-content-active-border-top: 1px solid #75a6fd;
+    --tab-content-active-border-right: 1px solid #75a6fd;
+    --tab-content-active-border-left: 1px solid #75a6fd;
+    --tab-hover-background: green;
+    --tab-hover-color: antiquewhite;
+    --dropdown-content: #ffffff;
+    --dropdown-content-selected-color: #0077cc;
+    --dropdown-content-selected-background: #e6f2ff;
+    --dropdown-button-background: #fffce8; 
+    --dropdown-button-color: black;
+    --form-background: #d0ebe2;
+    --scroll-bar-track: grey; 
+    --scroll-bar-color: green; 
+    --caret-color: green;
+    --background-img-url: url(/static/img/bg.jpg);
+}
+
+:root[data-theme="dark"] {
+    --bg: #262424; 
+    --fg: #e8e8e8; 
+    --accent: #3fbf6b; 
+    --card-bg: #302e2e; 
+    --card-border: #4a4747; 
+    --title-bg: #2f2d2d; 
+
+    --nav-btn-bg: rgba(255, 255, 255, 0.08);
+    --nav-btn-border: rgba(255, 255, 255, 0.12);
+    --nav-btn-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    
+    /* ЦВЕТА КНОПОК ДЛЯ ТЕМНОЙ ТЕМЫ */
+    --btn-bg-init: #343232;    /* Графитовый стартовый фон */
+    --btn-fg-init: #e8e8e8;    /* Светлый текст */
+    --btn-border-init: #4a4747;/* Темная рамка */
+    
+    --btn-bg: #2f6f3a;         /* Насыщенный темно-зеленый при наведении */
+    --btn-border: #5a5a5a;     /* Серая рамка при наведении */
+    --btn-fg: #f2f2f2;         /* Мягкий белый текст */
+    --btn-bg-active: #1e4624;  /* Глубокий зеленый при клике */
+
+    --table-bg: #2b2929;
+    --table-border: #4a4747;
+    --table-header-bg: #343232;
+    --table-header-fg: #e8e8e8;
+    --table-row-hover: #3a3838;
+    --table-divider: #5a5757; 
+
+    --tbody-tr-even: #111;
+    --tr-hover: #E63946; 
+    --tr-active-row: #0077cc;
+    --button-color: #f2f2f2;
+    --tab-content-active-border-top: 1px solid #75a6fd;
+    --tab-content-active-border-right: 1px solid #75a6fd;
+    --tab-content-active-border-left: 1px solid #75a6fd;
+    --dropdown-content: #fefefe;
+    --dropdown-content-selected-color: #0077cc;
+    --dropdown-content-selected-background: #fffce8;
+    --dropdown-button-background: #fffce8; 
+    --dropdown-button-color: black;
+    --scroll-bar-track: #c9edcd; 
+    --scroll-bar-color: green;
+    --caret-color: green;
+}
+
+:root {
+    text-decoration: none;
+    border: var(--root-border);
+    border-radius: 3px;
+}
+
+html, body {
+    margin: 0px;
+    padding: 0px;
+    height: 100%;
+    width: 100%;
+    font-family: Calibri, sans-serif;
+    overflow: hidden;
+}
+
+common-container {
+    height: 100vh;
+    display: grid;
+    grid-template-columns: auto 7fr;
+    grid-template-rows: 44px 44px 1fr 36px;
+    grid-gap: 1px;
+    grid-template-areas: 
+        "header header"
+        "nav article_title"
+        "nav article"
+        "footer footer";
+}
+
+nav {
+    margin: 0px;
+    padding: 1px;
+    display: grid;
+    grid-template-rows: repeat(12, minmax(48px, 54px));
+    grid-row-gap: 2px;
+    grid-area: nav; 
+    align-content: stretch;
+    background-size: cover;
+    background-position: center;
+    text-shadow: 1px 2px 3px grey;
+    background-image: var(--background-img-url);
+}
+
+header {
+    display: grid;
+    padding-left: 16px;
+    grid-template-columns: 3fr 2fr 2fr;
+    align-items: center; 
+    grid-area: header; 
+    background-size: cover;
+    background-position: center;
+    text-shadow: 1px 2px 3px grey;
+    background-image: var(--background-img-url);
+}
+
+/* article {
+    grid-area: article; 
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    border-radius: 3px;
+    border: 1px solid rgba(180, 180, 180, 0.3);
+} */
+
+article {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-area: article; /* задаем имя элемента */
+    grid-template-areas: "article_body article_info";
+    border-radius: 5px;
+    border: 1px solid rgba(180, 180, 180, 0.3);
+}
+article_body {
+    margin: 0;
+    grid-area: article_body; /* задаем имя элемента */
+    min-height: 100%;
+    display: grid;
+}
+article_info {
+    padding: 0px 1px 0px 1px;
+    grid-area: article_info; /* задаем имя элемента */
+    min-height: 100%;
+    display: grid;
+}
+
+article_title {
+    display: grid; 
+    padding-right: 8px;
+    padding-left: 4px;
+    font-size: 20px;
+    align-items: center; 
+    grid-area: article_title; 
+    grid-template-columns: 1fr 1fr;
+    background: var(--title-bg);
+}
+
+footer {
+    display: grid;
+    padding: 8px 16px;
+    align-items: center; 
+    grid-template-columns: 1fr 6fr;
+    grid-area: footer; 
+    background-size: cover;
+    background-position: center;
+    background-image: var(--background-img-url);
+}
+
+header, nav, article_title, footer {
+    border: 1px solid lightgray;
+    border-radius: 4px;
+}
+
+/* ⚠️ ИСПРАВЛЕНО: Убрана лишняя запятая в селекторе */
+footer > .footer-l, header > .header-l {
+    margin-left: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+footer > footer-r, header > header-r {
+    margin-right: 10px;
+    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+footer > footer-c, header > header-c {
+    margin: 4px 24px;
+    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+}
+
+nav > a {
+    font-size: 18px;
+}
+
+body {
+    background: var(--bg);
+    color: var(--fg);
+}
+
+/* ==========================================================================
+   НАВИГАЦИОННЫЕ И ОБЫЧНЫЕ КНОПКИ (Оптимизация и анимация)
+   ========================================================================== */
+
+/* Навигационные кнопки */
+.nav_button {
+    padding: 10px 14px;
+    display: flex;
+    position: relative;
+    min-width: 125px;
+    text-decoration: none;
+    align-items: center;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--button-color);
+    border: 1px solid var(--nav-btn-border);
+    border-radius: 6px;
+    background-repeat: no-repeat;
+    background-size: 200% 100%, auto, 100% 2px, 100% 2px, 100% 1px, 100% 1px;
+    background-position: 200% 0, 0 0, 0 0, 0 100%, 0 4px, 0 calc(100% - 4px);
+    background-image: linear-gradient(to right, rgba(255, 255, 255, .0) 30%, rgba(255, 255, 255, .8), rgba(255, 255, 255, .0) 70%), 
+                      linear-gradient(to right, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0) 85%, rgba(255, 255, 255, .5)), 
+                      linear-gradient(to right, rgba(121, 219, 144, 0.3), rgba(121, 219, 144, .5) 45%, rgba(121, 219, 144, 0.5)), 
+                      linear-gradient(to right, rgba(121, 219, 144, 0.3), rgba(121, 219, 144, .5) 0%, rgba(121, 219, 144, 0.5));
+    box-shadow: 3px 3px 6px grey;
+    transition: transform 0.1s ease, box-shadow 0.2s ease, background-position 0.3s linear;
+}
+
+/* Эффект наведения для навигационных кнопок */
+.nav_button:hover {
+    transform: translateY(1px); /* Смещение вниз на 1px */
+    background-position: -200% 0, 0 0, 0 0, 0 100%, 0 4px, 0 calc(100% - 4px);
+    box-shadow: 4px 4px 16px grey;
+}
+
+a.btn, a.nav_button {
+    text-decoration: none;
+}
+
+.btn {
+    text-decoration: none; 
+}
+
+nav > a {
+    font-size: 18px;
+}
+
+/* Обычные кнопки нового образца (.btn) */
+.btn {
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    border: 1px solid var(--btn-border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 6px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color .2s ease, background-color .2s ease, box-shadow .2s ease, transform .1s ease;
+}
+
+.btn:hover {
+    color: var(--btn-fg-hover); /* Тёплый желтоватый текст */
+    transform: translateY(1px);  /* Смещение вниз на 1px */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.35);
+}
+
+/* Обычные кнопки старого образца (тег button и класс .button) */
+button, .button {
+    margin: 0px;
+    padding: 5px 34px 5px 34px;
+    align-items: center;
+    display: inline-block;
+    cursor: pointer;
+    position: relative;
+    color: var(--button-color);
+    background-color: var(--button-background-color);
+    border: 1px solid lightgray;
+    font-weight: 500;
+    font-size: 15px;
+    font-family: Arial, sans-serif;
+    line-height: 1.5;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: color .2s ease-in-out, background-color .2s ease-in-out, border-color .2s ease-in-out, box-shadow .2s ease-in-out, transform 0.1s ease;
+}
+
+button:hover, .button:hover {
+    transform: translateY(1px);  /* Смещение вниз на 1px для вашей кнопки Сохранить */
+    box-shadow: 4px 4px 6px rgba(0, 0, 0, 0.2);
+    text-shadow: 1px 2px 3px grey;
+}
+
+/* Внутренняя кнопка инпута выбора файла (Добавлена интеграция тем) */
+input[type="file"]::file-selector-button {
+    border: 1px solid var(--btn-border-init);
+    padding: 10px 20px;
+    background-color: var(--btn-bg-init);
+    color: var(--btn-fg-init);
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+    transform: translateY(1px); /* Смещение вниз на 1px при наведении */
+    border-color: var(--btn-border);
+    background-color: var(--btn-bg);
+    color: var(--btn-fg);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); 
+}
+
+input[type="file"]::file-selector-button:active {
+    background-color: var(--btn-bg-active);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+
+/* ==========================================================================
+   ТАБЛИЦЫ И СЕТКА ДАННЫХ
+   ========================================================================== */
+
+.table-wrapper {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: auto; 
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25); 
+    margin-bottom: 6px;
+}
+
+.my_stick {
+    position: sticky;
+    padding: 0px 8px 0px 8px;
+    color: var(--table-stick-row);
+    background-color: var(--table-stick); 
+    box-sizing: border-box;
+    border: none;
+    background: var(--table-header-bg);
+    z-index: 3;
+    font-weight: bold;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.35), 
+                inset -1px 0 0 rgba(0, 0, 0, 0.25), 
+                inset 1px 0 0 rgba(0, 0, 0, 0.25); 
+}
+
+.sticky_row {
+    box-sizing: border-box;
+    position: sticky;
+    border: none;
+    background: var(--table-header-bg);
+    z-index: 5;
+    font-weight: bold;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.35), 
+                inset -1px 0 0 rgba(0, 0, 0, 0.25), 
+                inset 1px 0 0 rgba(0, 0, 0, 0.25); 
+}
+
+table {
+    width: auto;
+    min-width: 100%;
+    border: 1px solid var(--table-border);
+    border-radius: 4px;
+    font-size: 14px;
+    text-shadow: none;
+    border-collapse: collapse;
+}
+
+table tbody > tr:hover {
+    background-color: var(--table-row-hover);
+    box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2);
+}
+
+tbody td {
+    padding: 8px 12px;
+    border: 1px solid var(--table-border); 
+}
+
+tr > td {
+    border: var(--table-border);
+    margin-left: 4px;
+    padding: 3px 4px;
+    font-size: 14px;
+    text-align: center;
+}
+
+tr > th {
+    font-size: 16px;
+}
+
+.clickable-row.selected-row {
+    background-color: var(--clickable-row-selected) !important;
+    transition: background-color 0.15s ease;
+}
+
+tbody:not(.my_stick) tr:nth-child(odd) {
+    background-color: var(--tbody-tr-even);
+}
+
+tbody:not(.my_stick) tr:hover {
+    background-color: var(--tr-hover);
+}
+
+tbody:not(.my_stick) tr.active-row {
+    background-color: var(--tr-active-row);
+}
+
+
+/* ==========================================================================
+   ВКЛАДКИ (TABS) И ВЫПАДАЮЩИЕ СПИСКИ (DROPDOWNS)
+   ========================================================================== */
+
+.tab-content {
+    background-color: var(--tab-background-active);
+}
+
+.tab-content.active {
+    border-top: var(--tab-content-active-border-top);
+    border-right: var(--tab-content-active-border-right);
+    border-left: var(--tab-content-active-border-left);
+    background-color: var(--tab-background-active); 
+    border-radius: 6px;
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+.tab {
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.tab.active {
+    background-color: var(--tab-background-active);
+    border-top: 1px solid #75a6fd;
+    border-left: 1px solid #75a6fd;
+    border-right: 1px solid #75a6fd;
+    font-weight: bold;
+    z-index: 1;
+    position: relative;
+    border-bottom: none;
+}
+
+.tab:hover {
+    background: var(--tab-hover-background);
+    color: var(--tab-hover-color);
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    background-color: var(--dropdown-content);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    display: none;
+    position: absolute;
+    border-radius: 5px;
+    z-index: 5;
+    overflow: hidden;
+}
+
+.dropdown.open .dropdown-content {
+    display: block;
+}
+
+.dropdown-inner {
+    display: inline-block;
+    position: relative;
+}
+
+.dropdown-content a:hover {
+    color: var(--dropdown-content-selected-color);
+    background-color: var(--dropdown-content-selected-background);
+}
+
+.dropdown-content a {
+    color: var(--dropdown-button-color);
+    margin: 1px;
+    padding: 6px 12px;
+    font-size: 16px;
+    text-decoration: none;
+    border-radius: 4px;
+    text-align: left;
+    text-indent: 0;
+    display: block;
+    box-sizing: border-box;
+    gap: 10px;
+    transition: background 0.5s, color 0.8s;
+}
+
+.dropdown-content a.selected {
+    color: var(--dropdown-content-selected-color);
+    background-color: var(--dropdown-content-selected-background);
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 4px;
+}
+
+.dropdown-content i {
+    width: 24px;
+}
+
+.dropdown-content a.selected::after {
+    content: "✔";
+    color: green;
+    float: right;
+    margin-left: 10px;
+}
+
+.dropdown-button {
+    background-color: var(--dropdown-button-background);
+    color: var(--dropdown-button-color);
+    font-weight: bold;
+    font-size: 16px;
+    display: inline-block;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown.open .caret {
+    transform: rotate(180deg) scale(1.4);
+    transition: transform 0.2s ease;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.caret {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 7px;
+    transform: scale(1.2);
+    transform-origin: center;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 8px solid var(--caret-color);
+    height: 0;
+    width: 0;
+}
+
+.caret.open {
+    transform: scale(1.2) rotate(-180deg) translateY(1px);
+}
+/* Part 3 */
+/* ==========================================================================
+   ГЛОБАЛЬНЫЕ СВОЙСТВА И СБРОС СТИЛЕЙ (BOX-SIZING)
+   ========================================================================== */
+
+/* Расчет размеров блоков включая padding и border для стабильности верстки */
+*, *:after, *:before {
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   СТИЛИ ДЛЯ ФОРМ И ПОЛЕЙ ВВОДА (FORMS & INPUTS)
+   ========================================================================== */
+
+form {
+    display: block;
+    unicode-bidi: isolate;
+    margin: 1px 1px;
+    padding: 24px 15px 24px 24px;
+    text-shadow: none;
+    background-color: var(--form-background);
+    border: 1px solid rgba(0, 47, 189, 0.15);
+}
+
+/* Сетка для форм упорядоченного вида */
+.irr-form {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    row-gap: 8px;
+    column-gap: 12px;
+    align-items: center;
+}
+
+.form-row {
+    display: contents;
+}
+
+.form-row label {
+    text-align: left; 
+    white-space: nowrap;
+}
+
+.form-row input,
+.form-row select {
+    max-width: 320px;
+}
+
+.form-actions {
+    grid-column: 2;
+    padding-top: 12px;
+}
+
+/* Стилизация текстовых инпутов с тенью */
+.input_s, .input_d, .input_s_form {
+    padding: 8px;
+    font-size: 15px;
+    align-items: center;
+    border-radius: 5px;
+    width: 260px;
+    color: var(--button-color);
+    background-color: var(--input-background);
+    border: 1px solid rgba(180, 180, 180, 0.1);
+    box-shadow: 6px 6px 8px rgba(70, 205, 79, 0.2);
+}
+
+input[type="month"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    cursor: pointer;
+}
+
+
+/* ==========================================================================
+   ЗАГОЛОВКИ ТАБЛИЦ (THEAD)
+   ========================================================================== */
+
+thead th {
+    box-sizing: border-box;
+    border: none;
+    background: var(--table-header-bg);
+    height: 32px;
+    line-height: 32px;
+    padding: 0 10px;
+    white-space: nowrap; 
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.25), 
+                inset -1px 0 0 rgba(0, 0, 0, 0.25); 
+}
+
+/* ==========================================================================
+   КАСТОМНЫЕ СКРОЛЛБАРЫ (SCROLLBARS)
+   ========================================================================== */
+
+.scroll-x-y {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: auto;
+    position: relative;
+}
+
+/* Стили для общего контейнера скролла */
+.scroll-x-y::-webkit-scrollbar {
+    height: 8px; /* горизонтальный */
+    width: 4px; /* вертикальный */
+}
+
+/* Ползунок скролла */
+.scroll-x-y::-webkit-scrollbar-thumb {
+    background: var(--scroll-bar-color);
+    border-radius: 3px;
+}
+
+/* Дорожка скролла */
+.scroll-x-y::-webkit-scrollbar-track {
+    border: var(--table-border);
+}
+
+/* Скроллбары селекторов регионов и районов */
+#region-select,
+#district-select {
+    overflow-y: auto;
+    scrollbar-width: thin; 
+    scrollbar-color: var(--scroll-bar-color) #e8e8e8; 
+}
+
+#region-select::-webkit-scrollbar,
+#district-select::-webkit-scrollbar {
+    width: 4px;
+}
+
+#region-select::-webkit-scrollbar-track,
+#district-select::-webkit-scrollbar-track {
+    background: #e8e8e8;
+    border-radius: 2px;
+}
+
+#region-select::-webkit-scrollbar-thumb,
+#district-select::-webkit-scrollbar-thumb {
+    background: var(--scroll-bar-color); 
+    border-radius: 2px;
+    transition: background 0.2s ease;
+}
+
+#region-select::-webkit-scrollbar-thumb:hover,
+#district-select::-webkit-scrollbar-thumb:hover {
+    background: #008800; 
+}
+
+
+/* ==========================================================================
+   КОМПОНЕНТЫ И ЭЛЕМЕНТЫ ИНТЕРФЕЙСА (ИКОНКИ, КНОПКИ, ЛОГОТИПЫ)
+   ========================================================================== */
+
+.fas {
+    color: var(--caret-color);
+    margin-right: 10px;
+    z-index: 10;
+}
+
+.tiny-btn {
+    all: unset;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 3px 1px 1px 1px;
+    margin: 0;
+    line-height: 1;
+    background: none;
+    color: #333;
+    border: 1px solid;
+    border-radius: 3px;
+}
+
+.filter-head {
+    display: flex;
+    padding: 2px;
+    gap: 12px;
+    align-items: center;
+    font-size: 16px; 
+    font-weight: bold;
+}
+
+.image-upload {
+    display: flex;
+    width: 36px;
+    height: 30px;
+}
+
+.img-logo {
+    width: 28px;
+    height: 27px;
+    padding: 0px;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Иконки переключения тем и языков с тенью */
+.img-style {
+    border-radius: 18px;
+    margin: 2px 2px;
+    vertical-align: middle;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 5px 5px 8px rgba(70, 205, 79, 0.4);
+}
+
+/* Инвертируем тень по вертикали при наведении */
+.img-style:hover {
+    box-shadow: 5px -5px 8px rgba(70, 205, 79, 0.4);
+}
+
+.ok, .cancel {
+    width: 40px;
+    height: 36px;
+    margin: 0px 6px;
+    vertical-align: middle;
+    border-radius: 5px;
+}
+
+.ok {
+    padding: 3px 4px;
+}
+
+.cancel {
+    padding: 0px 1px 1px 0px;
+}
+
+
+/* ==========================================================================
+   ВСПЛЫВАЮЩИЕ ПОДСКАЗКИ И ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ
+   ========================================================================== */
+
+.has-helper {
+    position: relative;
+}
+
+.help-icon {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.has-helper:hover .help-icon {
+    opacity: 1;
+}
+
+.file-list {
+    margin: 6px 0px;
+    padding-left: 0;
+    list-style-position: inside;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+/* ==========================================================================
+   НОВЫЕ СТИЛИ ДЛЯ ИНПУТА ВЫБОРА ФАЙЛА И ФОТОГРАФИЙ (Интегрированы переменные)
+   ========================================================================== */
+
+/* Внутренняя кнопка инпута выбора файла в обычном состоянии */
+input[type="file"]::file-selector-button {
+    border: 1px solid var(--btn-border-init);
+    padding: 10px 20px;
+    background-color: var(--btn-bg-init);
+    color: var(--btn-fg-init);
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+/* При наведении — кнопка смещается на 1px вниз и перекрашивается */
+input[type="file"]::file-selector-button:hover {
+    transform: translateY(1px);
+    border-color: var(--btn-border);
+    background-color: var(--btn-bg);
+    color: var(--btn-fg);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); 
+}
+
+/* В момент клика */
+input[type="file"]::file-selector-button:active {
+    background-color: var(--btn-bg-active);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+textarea {
+    color: #444;
+    background: #deefdf;
+    border: 1px solid #ffe4b57a;
+    box-shadow: 2px 2px 5px darkseagreen;
+    border: 2px solid rgba(180, 180, 180, 0.3);
+}
+/* Стили эффекта увеличения для фотографий новостной ленты */
+.zoom-photo {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;                   
+    width: 100%;
+    max-width: 450px;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid var(--card-border);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.zoom-photo:hover {
+    transform: scale(1.5);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    z-index: 10; /* Чтобы увеличенная картинка была поверх текста */
+    position: relative;
+}
+
+/* Пример для красивого поля выбора файла */
+input[type="file"] {
+  border: 2px dashed #ccc;
+  padding: 10px;
+  /* background-color: #f9f9f9; */
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+input[type="file"]:hover {
+  border-color: #666; /* Меняем цвет рамки при наведении */
+}
+/* Стили для самой кнопки внутри инпута */
+/* Состояние внутренней кнопки по умолчанию */
+input[type="file"]::file-selector-button {
+  border: 1px solid #c8e6c9;       /* Едва заметная салатовая рамка */
+  padding: 10px 20px;
+  background-color: #e8f5e9;       /* Изначально нежный, мягкий зеленоватый фон */
+  color: #2e7d32;                  /* Текст изначально тёмно-зелёный */
+  border-radius: 6px;
+  cursor: pointer;
+  
+  /* Базовая лёгкая тень */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  
+  /* Плавный переход для всех изменений */
+  transition: all 0.2s ease;
+}
+
+/* При наведении (hover) — кнопка смещается вниз и становится ярче */
+input[type="file"]::file-selector-button:hover {
+  transform: translateY(2px);       /* Смещаем кнопку вниз на 1px сразу при наведении */
+  border-color: #388e3c;            /* Рамка становится чётче */
+  background-color: #4caf50;        /* Фон становится насыщенным зелёным */
+  color: #ffffff;                   /* Текст переключается на белый */
+  
+  /* Тень становится более глубокой и заметной */
+  box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3); 
+}
+
+/* В момент самого клика (active) по кнопке */
+input[type="file"]::file-selector-button:active {
+  background-color: #2e7d32;        /* Фон становится ещё темнее при нажатии */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* Прижимаем тень к земле */
+}
