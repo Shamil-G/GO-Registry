@@ -22,6 +22,7 @@ type Config struct {
 	PUBLIC_PATH   []string
 	Boss          []string
 	ApproveAdmins []string
+	HRList        []string
 	//
 	TESTER_LOGIN_NAME string
 	TESTER_TOP_LEVEL  int
@@ -131,6 +132,7 @@ func LoadConfig(IsProduction bool) error {
 		LOGIN_PAGE:    getEnv("LOGIN_PAGE", "/login"),
 		Boss:          parseCSVList(os.Getenv("Boss")),
 		ApproveAdmins: parseCSVList(os.Getenv("ApproveAdmins")),
+		HRList:        parseCSVList(os.Getenv("HR_DEPARTMENT")),
 		PUBLIC_PATH:   parseCSVList(os.Getenv("PUBLIC_PATHS")),
 		//
 		TESTER_LOGIN_NAME: getEnv("TESTER_LOGIN_NAME", "/login"),

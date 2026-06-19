@@ -4,8 +4,6 @@ package config
 import (
 	"log/slog"
 	"strings"
-
-	"os"
 )
 
 // IsBossPost проверяет, относится ли должность сотрудника к руководящему составу
@@ -39,9 +37,10 @@ func IsSuperAdmin(loginName string) bool {
 
 // IsHR проверяет, относится ли должность сотрудника к HR-отделу
 func IsHR(userDep string) bool {
-	HRDep := os.Getenv("HR_DEPARTMENT")
-	if strings.EqualFold(userDep, HRDep) {
-		return true
+	for _, hrDep := range Cfg.HRList {
+		if strings.EqualFold(userDep, hrDep) {
+			return true
+		}
 	}
 	return false
 }
