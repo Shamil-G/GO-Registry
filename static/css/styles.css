@@ -631,6 +631,20 @@ form {
     border: 1px solid rgba(0, 47, 189, 0.15);
 }
 
+div.field {
+    margin-top: 5px;
+    display: flex;
+    vertical-align: bottom;
+    align-items: center;
+    align-content: center;
+}
+
+div.field label {
+    height: 24px;
+    width: 240px;
+    font-size: 17px;
+}
+
 /* Сетка для форм упорядоченного вида */
 .irr-form {
     display: grid;
