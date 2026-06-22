@@ -2,9 +2,6 @@
 
 {{ define "main_title" }}{{ res_value "LIST_APPROVE" }}{{ end }}
 
-{{ define "navigate" }}{{ end }}
-{{ define "info" }}{{ end }}
-
 {{ define "body" }}
 <!-- Локальные стили для красивых статусов и анимации иконок действий -->
 <style>
@@ -29,15 +26,22 @@
     .action-icon:hover {
         transform: scale(1.18); /* Плавное увеличение на 18% */
     }
+
+    /* Идеальная длина штанишек для страницы БЕЗ фильтра */
+    .table-wrapper.scroll-x-y {
+        max-height: calc(100vh - 135px) !important; /* Вычитаем только шапку, меню и мелкие отступы */
+        overflow-y: auto !important;
+        border-bottom: 1px solid var(--card-border);
+    }
 </style>
 
 <!-- Активируем нашу новую серую сетку в 1px и скроллбары -->
 <div class="table-wrapper scroll-x-y">
     <table>
         <colgroup>
-            <col style="width: 10%;"><col style="width: 12%;"><col style="width: 12%;">
-            <col style="width: 18%;"><col style="width: 15%;"><col style="width: 15%;">
-            <col style="width: 18%;"><col style="width: 10%;">
+            <col style="width: 10%;"><col style="width: 10%;"><col style="width: 10%;">
+            <col style="width: 18%;"><col style="width: 12%;"><col style="width: 25%;">
+            <col style="width: 20%;"><col style="width: 10%;">
         </colgroup>
         <thead>
             <tr>

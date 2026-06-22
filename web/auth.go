@@ -28,6 +28,7 @@ func renderLoginForm(w http.ResponseWriter, r *http.Request, errorMsg string) {
 	}).ParseFiles(
 		"templates/base.html",
 		"templates/login.html",
+		"templates/sidebar.html", // Вынесенная инфо-панель
 	)
 
 	if err != nil {

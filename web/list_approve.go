@@ -123,6 +123,7 @@ func ListToApproveGet() http.HandlerFunc {
 		}).ParseFiles(
 			"templates/base.html",
 			"templates/list_approve.html",
+			"templates/sidebar.html", // Вынесенная инфо-панель
 		)
 
 		if err != nil {

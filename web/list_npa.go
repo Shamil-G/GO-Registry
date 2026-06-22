@@ -91,6 +91,7 @@ func ListNPA() http.HandlerFunc {
 		}).ParseFiles(
 			"templates/base.html",
 			"templates/list_npa.html",
+			"templates/sidebar.html", // Вынесенная инфо-панель
 		)
 
 		if err != nil {

@@ -51,6 +51,7 @@ func NewMessageGet() http.HandlerFunc {
 		}).ParseFiles(
 			"templates/base.html",
 			"templates/new_message.html",
+			"templates/sidebar.html", // Вынесенная инфо-панель
 		)
 
 		if err != nil {

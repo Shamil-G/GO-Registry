@@ -123,6 +123,7 @@ func TimeOffGet() http.HandlerFunc {
 		}).ParseFiles(
 			"templates/base.html",
 			"templates/time_off.html",
+			"templates/sidebar.html", // Вынесенная инфо-панель
 		)
 
 		if err != nil {

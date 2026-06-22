@@ -228,11 +228,18 @@ nav > a {
 
 article {
     display: grid;
-    grid-template-columns: 1fr minmax(auto, 30%);
+    /* По умолчанию (когда инфо-панели нет) одна колонка на 100% */
+    grid-template-columns: 1fr;
+    grid-template-areas: "article_body";
     grid-area: article; 
-    grid-template-areas: "article_body article_info";
     border-radius: 5px;
     border: 1px solid rgba(180, 180, 180, 0.3);
+}
+
+/* Если внутри article ЕСТЬ элемент article_info, переключаем сетку на 2 колонки */
+article:has(article_info) {
+    grid-template-columns: 1fr minmax(auto, 30%);
+    grid-template-areas: "article_body article_info";
 }
 
 article_body {

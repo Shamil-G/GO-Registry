@@ -73,6 +73,7 @@ func ListAbsent() http.HandlerFunc {
 		}).ParseFiles(
 			"templates/base.html",
 			"templates/list_absent.html",
+			"templates/sidebar.html", // Вынесенная инфо-панель
 		)
 
 		if err != nil {

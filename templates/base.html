@@ -77,67 +77,11 @@
             </div>
         </article_body>
 
-        <!-- ПРАВАЯ ИНФО-ПАНЕЛЬ (Ширина ограничена до 30% в styles.css) -->
+        <!-- Подключаем внешнюю инфо-панель -->
         {{ if .AllMessages }}
-        <article_info>
-            <div class="news-container">
-                <table>
-                    <thead class="news-head">
-                        <tr>
-                            <th>
-                                <a style="font-size: 16px;">{{ res_value "INFORMATION" }}</a>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="news-tbody">
-                    <tr>
-                        <td>
-                            {{ range .AllMessages }}
-                            <!-- Блок заголовка сообщения (дата и автор) -->
-                            <a style="margin-left:2px; font-size: 12px; font-weight:300">{{ .Date }}</a>&nbsp;
-                            <a style="font-weight:600">{{ .Author }}</a>
-                            <br>
-
-                            {{ if .DepName }}
-                            <a style="margin-left: 2px; font-size: 14px; font-weight: 500; font-style: italic">{{ .DepName }}</a>
-                            <br>
-                            {{ end }}
-                            
-                            <!-- Проверка наличия фотографии -->
-                            {{ if and .PhotoURL (gt (len .PhotoURL) 3) }}
-                            <div style="margin-left: 2px; margin-top: 5px; margin-bottom: 5px; display: block;">
-                                <a style="margin-left: 2px; font-size: 16px; font-weight: 500;">{{ .Message }}</a>
-                                <br><br>
-
-                                <!-- Контейнер для фото с центрированием (без хардкода цвета текста) -->
-                                <div style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
-                                    <a style="font-size: 17px; font-weight: bold; display: inline-block; margin-bottom: 8px;">{{ .PhotoFIO }}</a>
-                                    
-                                    <!-- Класс .zoom-photo теперь управляется исключительно из внешнего CSS -->
-                                    <img src="{{ .PhotoURL }}" alt="Photo" class="zoom-photo">
-                                    
-                                    <a style="font-size: 17px; font-weight: 600; font-style: italic; display: inline-block; margin-top: 8px;">{{ .PhotoPost }}</a>
-                                </div>
-                            </div>
-                            <br>
-                            {{ else }}
-                            <!-- Ветка без фото -->
-                            <hr style="margin-top: 5px; margin-bottom: 10px; border: 0; border-top: 1px solid var(--card-border);">                             
-                            <a style="margin-left: 2px; font-weight: 500;">{{ .Message }}</a>
-                            <br><br>
-                            {{ end }}
-                            
-                            {{ end }}
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-            {{ block "info" . }}{{ end }}
-        </article_info>
+            {{ template "info_sidebar" . }}
         {{ end }}
-
-    </article>
+      </article>
 
     <!-- ПОДВАЛ -->
     <footer>

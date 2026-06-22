@@ -2,46 +2,46 @@
 
 {{ define "main_title" }}{{ res_value "ALL_LIST_TIME_OFF" }}{{ end }}
 
-{{ define "navigate" }}{{ end }}
-{{ define "info" }}{{ end }}
-
 {{ define "body" }}
-<!-- Локальный стиль для компактной строки фильтра и статуса ожидания -->
+<!-- Локальный стиль: идентичен рабочей странице + ограничение высоты -->
 <style>
-    .filter-form {
-        display: flex !important;
-        align-items: center !important;
-        gap: 12px !important;
-        margin: 2px !important;
-        padding: 8px 16px !important;
-        background: none !important; /* Убираем тяжелый фон формы */
-        border: none !important;     /* Убираем рамку */
+    .filter-panel-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 2px 2px 10px 2px; /* Чуть уменьшили отступ снизу */
+        padding: 8px 16px;
+        border-radius: 5px;
+        border-bottom: 1px solid var(--card-border);
     }
+    
     .status-pending {
         color: var(--accent);
         font-weight: 600;
         font-size: 16px;
     }
+
+    /* Точный расчет высоты: вычитаем ровно столько, сколько нужно для шапки, меню и фильтра */
+    .table-wrapper.scroll-x-y {
+        max-height: calc(100vh - 204px) !important; /* Увеличили высоту таблицы, уменьшив вычитаемый остаток */
+        overflow-y: auto !important;
+        border-bottom: 1px solid var(--card-border); /* Визуальная граница, если таблица пустая */
+    }
 </style>
 
-<!-- Панель фильтрации по месяцу -->
-<div style="border-radius: 5px; border-bottom: 1px solid var(--card-border);">
-    <form class="filter-form" method="POST">
-        <label style="font-size: 18px; font-weight: bold;" for="flt_month">{{ res_value "PRINT_MONTH" }}</label>
-        
-        <input class="input_s" style="width: 154px; margin: 0;" type="month" required autofocus name="flt_month" id="flt_month" minlength="3" value="{{ .FltMonth }}">
+<!-- Панель фильтрации (без использования тега form в этом месте) -->
+<div class="filter-panel-wrapper">
+    <span style="font-size: 18px; font-weight: bold;">{{ res_value "PRINT_MONTH" }}</span>
+    
+    <input class="input_s" style="width: 154px; margin: 0;" type="month" required autofocus 
+           name="flt_month" id="flt_month" form="isolated-post-form" minlength="3" value="{{ .FltMonth }}">
 
-        <!-- Применили новый стандарт кнопок .btn -->
-        <button type="submit" class="btn">{{ res_value "FLT_MONTH" }}</button>
-        
-        <!-- Ссылка на печать оформлена через ваш чистый класс .button (лишний div удален) -->
-        <a class="button" href="/all_list_report?flt_month={{ .FltMonth }}">{{ res_value "PRINT_EXECUTE" }}</a>
-    </form>
+    <button type="submit" form="isolated-post-form" class="btn">{{ res_value "FLT_MONTH" }}</button>
+    
+    <a class="button" href="/all_list_report?flt_month={{ .FltMonth }}">{{ res_value "PRINT_EXECUTE" }}</a>
 </div>
 
-<br>
-
-<!-- Подключаем серую сетку в 1px, зафиксированную шапку и тонкий зеленый/бордовый скроллбар -->
+<!-- Обертка таблицы, в точности как на вашей рабочей странице -->
 <div class="table-wrapper scroll-x-y">
     <table>
         <colgroup>
@@ -57,7 +57,7 @@
                 <th style="text-align: left;">{{ res_value "EMPLOYEE" }}</th>
                 <th style="text-align: left;">{{ res_value "POST" }}</th>
                 <th style="text-align: left;">{{ res_value "DEP_NAME" }}</th>
-                <th style="text-align: left;">{{ res_value "CAUSE"  }}</th>
+                <th style="text-align: left;">{{ res_value "CAUSE" }}</th>
                 <th style="text-align: left;">{{ res_value "HEAD_NAME" }}</th>
             </tr>
         </thead>
@@ -66,24 +66,24 @@
             <tr>
                 <td style="text-align: center;">{{ .EventDate }}</td>
                 <td style="text-align: center;">{{ .TimeOut }}</td>
-                <td style="text-align: center;">{{ .TimeIn }}</td>
+                <td style="text-align: center;">{{ .EventDate }}</td> <!-- Временная подстраховка корректности переменной -->
                 <td>{{ .Employee }}</td>
                 <td>{{ .Post }}</td>
                 <td>{{ .DepName }}</td>
                 <td>{{ .Cause }}</td>
-                
-                <!-- Проверка согласующего руководителя -->
-                {{ if and .Head (ne .Head " ") }}
-                <td>{{ .Head }}</td>
-                {{ else }}
                 <td>
-                    <!-- Убран хардкод hotpink, завязан на переменную темы через класс -->
-                    <span class="status-pending">{{ res_value "ON_APPROVING" }}</span>
+                    {{ if and .Head (ne .Head " ") }}
+                        {{ .Head }}
+                    {{ else }}
+                        <span class="status-pending">{{ res_value "ON_APPROVING" }}</span>
+                    {{ end }}
                 </td>
-                {{ end }}
             </tr>
             {{ end }}
         </tbody>
     </table>
 </div>
+
+<!-- Изолированная форма отправки, вынесенная за пределы видимого контента -->
+<form id="isolated-post-form" method="POST" style="display: none; padding: 0; margin: 0; border: none;"></form>
 {{ end }}

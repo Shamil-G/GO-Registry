@@ -88,6 +88,7 @@ func AllListTimeOff() http.HandlerFunc {
 		}).ParseFiles(
 			"templates/base.html",
 			"templates/all_list_time_off.html",
+			"templates/sidebar.html", // Вынесенная инфо-панель
 		)
 
 		if err != nil {

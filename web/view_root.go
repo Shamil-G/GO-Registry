@@ -103,6 +103,7 @@ func ViewRootGet() http.HandlerFunc {
 		}).ParseFiles(
 			"templates/base.html",
 			"templates/home.html",
+			"templates/sidebar.html", // Вынесенная инфо-панель
 		)
 
 		if err != nil {

@@ -4,10 +4,6 @@
 
 {{ define "navigate" }}{{ end }}
 
-{{ define "info" }}
-    <p>Дополнительная информация загружена успешно.</p>
-{{ end }}
-
 {{ define "sidebar_menu" }}
     <!-- На главной странице выводим локальную закладку и кнопки ролей -->
     {{ template "navigate" . }}
@@ -33,7 +29,7 @@
 
         <a class="nav_button" href="/new-message">{{ res_value "NEW_MESSAGE" }}</a>
         <a class="nav_button" href="/list-npa">{{ res_value "LIST_NPA" }}</a>
-        <a class="nav_button" href="/">{{ res_value "NEAR_BIRTH_DATE" }}</a>
+        <!-- <a class="nav_button" href="/">{{ res_value "NEAR_BIRTH_DATE" }}</a> -->
         <a class="nav_button" href="/static/nsi/PhoneRefer.pdf" target="_blank">{{ res_value "PHONE_REFER" }}</a>
         <a class="nav_button" href="/logout">{{ res_value "LOGOUT" }}</a>
     {{ else }}
