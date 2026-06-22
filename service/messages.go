@@ -46,7 +46,7 @@ func GetAllMessage(ctx context.Context) []MessageItem {
 			COALESCE(PHOTO_URL, ' ') AS PHOTO_URL,
 			COALESCE(PHOTO_FIO, ' ') AS PHOTO_FIO,
 			COALESCE(PHOTO_POST, ' ') AS PHOTO_POST
-		FROM messages_2
+		FROM messages
 		WHERE mess_date > sysdate - 8
 		ORDER BY mess_date DESC`
 
