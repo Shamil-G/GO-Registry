@@ -132,7 +132,7 @@ func NewMessagePost() http.HandlerFunc {
 		// Вызываем процедуру Oracle, передавая имя файла в качестве URL
 		err := storage.DBExec(
 			r.Context(),
-			"reg.new_message_2",
+			"reg.new_message",
 			pageCtx.FIO,
 			pageCtx.DepName,
 			newMessage,
