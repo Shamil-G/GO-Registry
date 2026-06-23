@@ -14,6 +14,20 @@
             display: block;
             margin: 0 auto;
         }
+        /* --- ВЫРАВНИВАНИЕ ТЕКСТА ПО ШИРИНЕ --- */
+        .news-text-justify {
+            text-align: justify;
+            text-justify: inter-word; /* Улучшает распределение пробелов между словами */
+            display: block;
+            word-break: break-word;   /* Защита от разрыва сетки длинными словами/ссылками */
+        }
+
+        /* Корректируем тег <pre> для веток без фото, чтобы он тоже тянулся по ширине и переносил слова */
+        .news-container pre {
+            text-align: justify;
+            white-space: pre-wrap;    /* Позволяет тексту внутри pre переноситься на новую строку */
+            font-family: inherit;     /* Наследует шрифт проекта вместо моноширинного (по желанию) */
+        }        
     </style>
 
     <div class="news-container">
@@ -33,7 +47,7 @@
                         {{ range .AllMessages }}
                             <!-- Проверка наличия фотографии -->
                             {{ if and .PhotoURL (gt (len .PhotoURL) 3) }}
-                            <div style="margin-left: 2px; margin-top: 5px; margin-bottom: 5px; display: block;">
+                            <div style="margin: 5px 10px; display: block;">
                                 <br>
                                 <!-- Контейнер для фото с центрированием -->
                                 <div style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
@@ -46,7 +60,7 @@
                             {{ else }}
                                 <!-- Ветка без фото -->
                                 <hr style="margin-top: 5px; margin-bottom: 10px; border: 0; border-top: 1px solid var(--card-border);">                             
-                                <pre style="margin: 2px; font-weight: 500;">{{ .Message }}</pre>
+                                <pre style="margin: 2px 10px; font-weight: 500;">{{ .Message }}</pre>
                                 <br><br>
                             {{ end }}
                             <br>
