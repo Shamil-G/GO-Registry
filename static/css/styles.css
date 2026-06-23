@@ -238,7 +238,7 @@ article {
 
 /* Если внутри article ЕСТЬ элемент article_info, переключаем сетку на 2 колонки */
 article:has(article_info) {
-    grid-template-columns: 1fr minmax(auto, 30%);
+    grid-template-columns: 1fr minmax(auto, 35%);
     grid-template-areas: "article_body article_info";
 }
 
@@ -741,6 +741,13 @@ textarea {
     width: 100%;
 }
 
+pre {
+    white-space: pre-wrap !important; /* Разрешаем перенос длинных строк */
+    word-break: break-word;          /* Безопасно разбиваем слишком длинные слова (например, ссылки) */
+    font-family: inherit;            /* Наследуем шрифт страницы */
+    margin: 0;                       /* Сбрасываем лишние отступы */
+}
+
 input[type="month"]::-webkit-calendar-picker-indicator {
     opacity: 0;
     cursor: pointer;
@@ -908,7 +915,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     margin-left: auto;
     margin-right: auto;                   
     width: 100%;
-    max-width: 450px;
+    max-width: 300px;
     height: auto;
     border-radius: 4px;
     border: 1px solid var(--card-border);

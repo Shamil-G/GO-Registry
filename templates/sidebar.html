@@ -2,6 +2,20 @@
 <!-- ПРАВАЯ ИНФО-ПАНЕЛЬ -->
 {{ if .AllMessages }}
 <article_info>
+    <!-- Локальные стили ТОЛЬКО для контроля размеров огромных фото -->
+    <style>
+        .news-container .zoom-photo {
+            max-width: 100%;       /* Фото не выйдет за пределы панели */
+            max-height: 350px;     /* Ограничение по высоте, чтобы не занимало весь экран */
+            height: auto;          /* Сохраняем пропорции */
+            width: auto;
+            border-radius: 6px;    /* Аккуратные скругленные углы */
+            object-fit: contain;   /* Фото красиво впишется в рамки */
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+
     <div class="news-container">
         <table>
             <thead class="news-head">
@@ -13,40 +27,40 @@
             </thead>
             <tbody class="news-tbody">
             <tr>
-                <td>
-                    {{ range .AllMessages }}
-                    <!-- Блок заголовка сообщения (дата и автор) -->
-                    <a style="margin-left:2px; font-size: 12px; font-weight:300">{{ .Date }}</a>&nbsp;
-                    <a style="font-weight:600">{{ .Author }}</a>
-                    <br>
-
-                    {{ if .DepName }}
-                    <a style="margin-left: 2px; font-size: 14px; font-weight: 500; font-style: italic">{{ .DepName }}</a>
-                    <br>
-                    {{ end }}
-                    
-                    <!-- Проверка наличия фотографии -->
-                    {{ if and .PhotoURL (gt (len .PhotoURL) 3) }}
-                    <div style="margin-left: 2px; margin-top: 5px; margin-bottom: 5px; display: block;">
-                        <a style="margin-left: 2px; font-size: 16px; font-weight: 500;">{{ .Message }}</a>
-                        <br><br>
-
-                        <!-- Контейнер для фото с центрированием -->
-                        <div style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
-                            <a style="font-size: 17px; font-weight: bold; display: inline-block; margin-bottom: 8px;">{{ .PhotoFIO }}</a>
-                            <img src="{{ .PhotoURL }}" alt="Photo" class="zoom-photo">
-                            <a style="font-size: 17px; font-weight: 600; font-style: italic; display: inline-block; margin-top: 8px;">{{ .PhotoPost }}</a>
-                        </div>
+                <td style="padding: 0px">
+                    <!-- Используем ваш родной класс .scroll-x-y и добавляем ему высоту, как в первой таблице -->
+                    <div class="scroll-x-y" style="max-height: calc(100vh - 165px) !important;">
+                        {{ range .AllMessages }}
+                            <!-- Проверка наличия фотографии -->
+                            {{ if and .PhotoURL (gt (len .PhotoURL) 3) }}
+                            <div style="margin-left: 2px; margin-top: 5px; margin-bottom: 5px; display: block;">
+                                <br>
+                                <!-- Контейнер для фото с центрированием -->
+                                <div style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
+                                    <a style="font-size: 17px; font-weight: bold; display: inline-block; margin-bottom: 8px;">{{ .PhotoFIO }}</a>
+                                    <img src="{{ .PhotoURL }}" alt="Photo" class="zoom-photo">
+                                    <a style="font-size: 17px; font-weight: 600; font-style: italic; display: inline-block; margin-top: 8px;">{{ .PhotoPost }}</a>
+                                </div>
+                                <pre style="margin-left: 2px; font-size: 16px; font-weight: 500;">{{ .Message }}</pre>
+                            </div>
+                            {{ else }}
+                                <!-- Ветка без фото -->
+                                <hr style="margin-top: 5px; margin-bottom: 10px; border: 0; border-top: 1px solid var(--card-border);">                             
+                                <pre style="margin: 2px; font-weight: 500;">{{ .Message }}</pre>
+                                <br><br>
+                            {{ end }}
+                            <br>
+                            <!-- Блок заголовка сообщения (дата и автор) -->
+                            <a style="margin-left:2px; font-size: 12px; font-weight:300">{{ .Date }}</a>&nbsp;
+                            <a style="font-weight:600">{{ .Author }}</a>
+                            <br>
+                            {{ if .DepName }}
+                            <a style="margin-left: 2px; font-size: 14px; font-weight: 600; font-style: italic">{{ .DepName }}</a>
+                            <br>
+                            {{ end }}                        
+                            <br>                    
+                        {{ end }}
                     </div>
-                    <br>
-                    {{ else }}
-                    <!-- Ветка без фото -->
-                    <hr style="margin-top: 5px; margin-bottom: 10px; border: 0; border-top: 1px solid var(--card-border);">                             
-                    <a style="margin-left: 2px; font-weight: 500;">{{ .Message }}</a>
-                    <br><br>
-                    {{ end }}
-                    
-                    {{ end }}
                 </td>
             </tr>
             </tbody>
