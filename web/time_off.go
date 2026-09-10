@@ -96,7 +96,7 @@ func TimeOffGet() http.HandlerFunc {
 
 		// Вычисляем сообщение об успехе, используя язык из готового pageCtx.Lang
 		// 🚀 ЧИТАЕМ СООБЩЕНИЯ ДЛЯ БАЗОВОГО ШАБЛОНА И ЗДЕСЬ ТОЖЕ!
-		messages := message.GetAllMessage(r.Context())
+		messages := message.GetAllMessage(r.Context(), pageCtx.FIO)
 
 		msgParam := r.URL.Query().Get("msg")
 		messageText := ""
@@ -221,7 +221,7 @@ func TimeOffPost() http.HandlerFunc {
 			_ = storage.DBSelectMany(r.Context(), "time_off_post", &list, queryGet, pageCtx.FIO)
 
 			// 2. Собираем сообщения i18n
-			messages := message.GetAllMessage(r.Context())
+			messages := message.GetAllMessage(r.Context(), pageCtx.FIO)
 
 			// 3. Формируем data и кладем ошибку Oracle прямо в Message
 			data := ViewTimeOff{

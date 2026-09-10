@@ -49,8 +49,14 @@ type ViewData struct {
 // ViewRootGet отображает главную страницу сайта (GET /)
 func ViewRootGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// 1. Сквозное чтение объявлений — теперь работает железно для всех, отдавая [] при пустоте
-		messages := message.GetAllMessage(r.Context())
+		// 1. Извлекаем готовый контекст, собранный нашей мидлварью PageContext.
+		// Она гарантированно пропускает и гостей (IsAnonymous=true), и шефов.
+		// Читается до ленты: GetAllMessage нужен FIO читателя, чтобы отметить
+		// его собственные новости (у гостя оно пустое — и отмечать нечего).
+		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
+
+		// 2. Сквозное чтение объявлений — теперь работает железно для всех, отдавая [] при пустоте
+		messages := message.GetAllMessage(r.Context(), pageCtx.FIO)
 		slog.Debug("[ROOT] Сообщения успешно получены", "count", len(messages), "PHOTO_FIO", message.MessageItem{}.PhotoFIO)
 
 		startSSO := time.Now()
@@ -62,10 +68,6 @@ func ViewRootGet() http.HandlerFunc {
 		} else {
 			// slog.Debug("[ROOT] Именинники успешно получены", "duration", time.Since(startSSO))
 		}
-
-		// 1. Извлекаем готовый контекст, собранный нашей мидлварью Authorize.
-		// Теперь она гарантированно пропускает и гостей (IsAnonymous=true), и шефов.
-		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
 
 		var data ViewData
 		// 🔐 БЕЗОПАСНЫЙ ЩИТ: Заходим в объект User только если это НЕ аноним!

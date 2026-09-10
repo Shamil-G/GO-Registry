@@ -18,11 +18,26 @@ type Config struct {
 	ListenAddr string
 	SSOServer  string
 	// TrustedServers []string
-	LOGIN_PAGE    string
-	PUBLIC_PATH   []string
+	LOGIN_PAGE  string
+	PUBLIC_PATH []string
+	// PublicHosts — внешние адреса портала, какими их видит браузер, из
+	// PUBLIC_HOSTS в .env. Нужны web.RequireSameOrigin, когда перед сервисом
+	// стоит обратный прокси, переписывающий Host на адрес апстрима и не
+	// проставляющий X-Forwarded-Host. Пустой список — норма при прямом
+	// обращении.
+	PublicHosts   []string
 	Boss          []string
 	ApproveAdmins []string
 	HRList        []string
+	// MetricsAllowedIPs — кому отдавать /metrics (METRICS_ALLOWED_IPS).
+	// Пустой список означает «всем», как было раньше; при старте про это
+	// пишется предупреждение. Подробности — web/metrics_access.go.
+	MetricsAllowedIPs []string
+	// SecurityList — департаменты службы безопасности (SECURITY_DEPARTMENT).
+	// СБ ведёт собственный список отсутствий (/secure-time-off) и следит, кто и
+	// когда приходит на работу. Пустой список — норма и безопасный дефолт: тогда
+	// раздел остаётся только у супер-администраторов, как было в меню.
+	SecurityList []string
 	//
 	TESTER_LOGIN_NAME string
 	TESTER_TOP_LEVEL  int
@@ -133,7 +148,11 @@ func LoadConfig(IsProduction bool) error {
 		Boss:          parseCSVList(os.Getenv("Boss")),
 		ApproveAdmins: parseCSVList(os.Getenv("ApproveAdmins")),
 		HRList:        parseCSVList(os.Getenv("HR_DEPARTMENT")),
-		PUBLIC_PATH:   parseCSVList(os.Getenv("PUBLIC_PATHS")),
+		SecurityList:  parseCSVList(os.Getenv("SECURITY_DEPARTMENT")),
+
+		MetricsAllowedIPs: parseCSVList(os.Getenv("METRICS_ALLOWED_IPS")),
+		PUBLIC_PATH:       parseCSVList(os.Getenv("PUBLIC_PATHS")),
+		PublicHosts:       parseCSVList(os.Getenv("PUBLIC_HOSTS")),
 		//
 		TESTER_LOGIN_NAME: getEnv("TESTER_LOGIN_NAME", "/login"),
 		TESTER_TOP_LEVEL:  topLevel,
@@ -152,7 +171,16 @@ func LoadConfig(IsProduction bool) error {
 		DBMaxLifeTimeSession: getEnv("DBMaxLifeTimeSession", "180"),
 	}
 	// LoadPublicPaths()
-	slog.Info("[LoadConfig]", "PUBLIC_PATH", Cfg.PUBLIC_PATH)
+	LoadTrustedProxies()
+	slog.Info("[LoadConfig]", "PUBLIC_PATH", Cfg.PUBLIC_PATH, "PUBLIC_HOSTS", Cfg.PublicHosts)
 	slog.Debug("[LoadConfig]", "Boss", Cfg.Boss, "ApproveAdmins", Cfg.ApproveAdmins)
+
+	// Предупреждение, а не молчание: /metrics отдаёт карту сервиса и имена
+	// процедур Oracle, и открытым он остаётся только по недосмотру.
+	if len(Cfg.MetricsAllowedIPs) == 0 {
+		slog.Warn("METRICS_ALLOWED_IPS не задан — /metrics доступен всем, кто может открыть портал")
+	} else {
+		slog.Info("METRICS_ALLOWED_IPS загружен", "ips", Cfg.MetricsAllowedIPs)
+	}
 	return nil
 }

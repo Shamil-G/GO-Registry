@@ -71,7 +71,7 @@ func AllListTimeOff() http.HandlerFunc {
 			http.Error(w, "Ошибка базы данных: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
-		messages := message.GetAllMessage(r.Context())
+		messages := message.GetAllMessage(r.Context(), pageCtx.FIO)
 		// 4. ИНИЦИАЛИЗИРУЕМ НАШ НОВЫЙ ВЫДЕЛЕННЫЙ ОБЪЕКТ
 		data := AllTimeOffPageData{
 			BasePageContext: pageCtx,

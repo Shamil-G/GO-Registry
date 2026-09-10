@@ -67,7 +67,7 @@ func ListNPA() http.HandlerFunc {
 		// 1. 🚀 Интегрируем список законов из сервиса
 		npaList := service.GetStaticNpaList()
 
-		allMess := service.GetAllMessage(r.Context())
+		allMess := service.GetAllMessage(r.Context(), pageCtx.FIO)
 		currentYear := time.Now().Year() // Считаем на месте, как вы и просили
 
 		slog.Info("VIEW LIST NPA", "username", pageCtx.FIO, "boss", pageCtx.IsBoss)
@@ -120,6 +120,8 @@ func LogClick() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Получен запрос на логирование клика НПА")
 
+		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
+
 		var data ClickLogPayload
 		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 			slog.Error("Failed to decode log-click JSON", "Error", err)
@@ -127,14 +129,17 @@ func LogClick() http.HandlerFunc {
 			return
 		}
 
-		if data.UserName == "" || data.Name == "" {
+		// Из тела запроса берём только ЧТО открыли. Кто открыл — из сессии:
+		// user_name и dep_name раньше приходили тем же JSON-ом, то есть
+		// статистику использования НПА мог написать кто угодно от чужого имени
+		// (пункт 0.4 плана). Поля в ClickLogPayload оставлены: старые страницы,
+		// открытые в браузере, продолжают их присылать, просто мы их не читаем.
+		if data.Name == "" || pageCtx.IsAnonymous {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
-		// 💡 ИСПРАВИЛИ: Добавили context.Background() первым аргументом,
-		// чтобы совпало с контрактом функции (теперь аргументов ровно 5)
-		go service.UseFileStatistic(data.UserName, data.DepName, data.Name, data.Path)
+		go service.UseFileStatistic(pageCtx.FIO, pageCtx.DepName, data.Name, data.Path)
 
 		// Отдаем статус 204. Браузер сразу, без задержек, скачивает файл
 		w.WriteHeader(http.StatusNoContent)

@@ -25,7 +25,9 @@ func Router() http.Handler {
 	// r.Use(mdw.SlogLogger)
 	r.Use(mdw.Metrics)
 
-	r.Handle("/metrics", promhttp.Handler())
+	// Метрики — только с адресов из METRICS_ALLOWED_IPS (см. web/metrics_access.go).
+	// Пустой список в .env означает «всем», как было раньше.
+	r.With(webH.RequireMetricsAccess).Handle("/metrics", promhttp.Handler())
 	// Health
 	r.Post("/ping", ssoPkg.Alive())
 	// Статика
@@ -37,6 +39,10 @@ func Router() http.Handler {
 	// -----------------------------
 	r.Group(func(r chi.Router) {
 		r.Use(mdw.PageContext)
+		// Изменяющие запросы принимаются только со страниц самого портала
+		// (см. web/same_origin.go). Стоит сразу после PageContext: в лог
+		// отказа попадает пользователь и его IP.
+		r.Use(webH.RequireSameOrigin)
 		// Главная
 		// Без этого не сработает middleware и не будет получен контекст
 		// зарегистрированного пользователя
@@ -66,9 +72,14 @@ func Router() http.Handler {
 		r.Post("/log-click", webH.LogClick())
 		r.Post("/uploads-use-npa", webH.UploadsUseNpa())
 
-		// Список, который заполняют сами безопасники
-		r.Post("/secure-time-off", webH.SecureTimeOffPost())
-		r.Get("/secure-time-off", webH.SecureTimeOffGet())
+		// Список, который заполняют сами безопасники. Раздел закрыт целиком:
+		// департаменты СБ задаются SECURITY_DEPARTMENT в .env, пока там пусто —
+		// доступ только у супер-администраторов (см. web/require.go).
+		r.Group(func(r chi.Router) {
+			r.Use(webH.RequireSecurity)
+			r.Get("/secure-time-off", webH.SecureTimeOffGet())
+			r.Post("/secure-time-off", webH.SecureTimeOffPost())
+		})
 
 		// Отчет по списку
 		r.Get("/all-list-time-off", webH.AllListTimeOff())
@@ -77,8 +88,17 @@ func Router() http.Handler {
 
 		r.Get("/list-absent", webH.ListAbsent())
 
-		r.Get("/new-message", webH.NewMessageGet())
-		r.Post("/new-message", webH.NewMessagePost())
+		// Публикация объявлений на главной — только HR и администраторы.
+		// Форма и раньше рисовалась только для них, но POST принимал кого угодно.
+		r.Group(func(r chi.Router) {
+			r.Use(webH.RequireHR)
+			r.Get("/new-message", webH.NewMessageGet())
+			r.Post("/new-message", webH.NewMessagePost())
+		})
+		// Удалить новость может только её автор — проверка в самом хендлере
+		// (см. web/del_message.go), отдельной роли для этого нет: своя новость
+		// может быть и у администратора, и у HR.
+		r.Post("/del-message", webH.DelMessagePost())
 	})
 
 	return r

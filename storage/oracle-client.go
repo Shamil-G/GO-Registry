@@ -25,7 +25,10 @@ var DB *sqlx.DB
 func Init(IsProduction bool) error {
 	// Собираем строку подключения без таскания параметров
 	connStr := "oracle://" + config.Cfg.DBUser + ":" + config.Cfg.DBPassword + "@" + config.Cfg.DBServer + "/" + config.Cfg.DBServiceName
-	slog.Info("INIT DB", "CONNECTION", connStr)
+	// Строку подключения НЕ логируем: в ней пароль открытым текстом, а
+	// logs/registry.log читают и копируют кому попало. Полезное из неё —
+	// адрес и сервис — уходит в лог отдельными полями.
+	slog.Info("INIT DB", "server", config.Cfg.DBServer, "service", config.Cfg.DBServiceName, "user", config.Cfg.DBUser)
 
 	var err error
 	DB, err = sqlx.Open("oracle", connStr)
@@ -95,7 +98,7 @@ func DBExec(ctx context.Context, procName string, args ...any) error {
 	metrics.DBSPTotal.WithLabelValues(procName).Inc()
 
 	if err != nil {
-		metrics.DBSPErrors.WithLabelValues(procName, err.Error()).Inc()
+		metrics.DBSPErrors.WithLabelValues(procName, errorLabel(err)).Inc()
 		slog.Error("[DBExec]", "Критическая ошибка выполнения", procName, "parameters", placeholders(len(args)), "err", err)
 	}
 
@@ -115,7 +118,7 @@ func DBExecQuery(ctx context.Context, procName string, args ...any) (*sql.Rows, 
 	metrics.DBSPTotal.WithLabelValues(procName).Inc()
 
 	if err != nil {
-		metrics.DBSPErrors.WithLabelValues(procName, err.Error()).Inc()
+		metrics.DBSPErrors.WithLabelValues(procName, errorLabel(err)).Inc()
 		slog.Error("[DBExecQuery]", "Критическая ошибка выполнения", procName, "parameters", placeholders(len(args)), "err", err)
 	}
 
@@ -132,7 +135,7 @@ func DBExecNamed(ctx context.Context, query string, procName string, args ...any
 	metrics.DBSPTotal.WithLabelValues(procName).Inc()
 
 	if err != nil {
-		metrics.DBSPErrors.WithLabelValues(procName, err.Error()).Inc()
+		metrics.DBSPErrors.WithLabelValues(procName, errorLabel(err)).Inc()
 		slog.Error("[DBExecNamed]", "Критическая ошибка выполнения", query, "parameters", placeholders(len(args)), "err", err)
 	}
 
@@ -149,7 +152,7 @@ func DBSelectOne(ctx context.Context, name string, dest any, query string, args 
 	metrics.DBSelectTotal.WithLabelValues(name).Inc()
 
 	if err != nil {
-		metrics.DBSelectErrors.WithLabelValues(name, err.Error()).Inc()
+		metrics.DBSelectErrors.WithLabelValues(name, errorLabel(err)).Inc()
 		slog.Error("[DBSelectOne]", "Критическая ошибка выполнения", name, "query", query, "err", err)
 	}
 
@@ -167,7 +170,7 @@ func DBSelectMany[T any](ctx context.Context, name string, dest *[]T, query stri
 	metrics.DBSelectTotal.WithLabelValues(name).Inc()
 
 	if err != nil {
-		metrics.DBSelectErrors.WithLabelValues(name, err.Error()).Inc()
+		metrics.DBSelectErrors.WithLabelValues(name, errorLabel(err)).Inc()
 		slog.Error("[DBSelectMany]", "Критическая ошибка выполнения", name, "query", query, "err", err)
 	}
 

@@ -67,7 +67,7 @@ func SecureTimeOffGet() http.HandlerFunc {
 		}
 
 		// Читаем сообщения для базового шаблона
-		messages := message.GetAllMessage(r.Context())
+		messages := message.GetAllMessage(r.Context(), pageCtx.FIO)
 
 		msgParam := r.URL.Query().Get("msg")
 		messageText := ""
@@ -201,7 +201,7 @@ func SecureTimeOffPost() http.HandlerFunc {
 			_ = storage.DBSelectMany(r.Context(), "secure_time_off_post", &list, query)
 
 			// Получаем сообщения для базового шаблона
-			messages := message.GetAllMessage(r.Context())
+			messages := message.GetAllMessage(r.Context(), pageCtx.FIO)
 
 			// Собираем data. Ошибку Oracle кладем напрямую в Message
 			data := ViewTimeOff{

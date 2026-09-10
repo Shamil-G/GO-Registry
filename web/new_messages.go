@@ -5,11 +5,8 @@ import (
 	"bytes"
 	// "database/sql"
 	"html/template"
-	"io"
 	"log/slog"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"gusseynov/GO-Registry/config"
@@ -79,6 +76,19 @@ func NewMessagePost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
 
+		// Потолок на тело запроса ставится ДО первого чтения формы: r.FormValue
+		// разбирает multipart сам, и без этой строки гигабайтный файл уехал бы
+		// во временный каталог ещё до того, как мы посмотрим на него.
+		limitPhotoBody(w, r)
+
+		if err := r.ParseMultipartForm(maxPhotoBytes); err != nil {
+			// Сюда же приходит превышение лимита из MaxBytesReader.
+			slog.Warn("[NewMessage] форма не разобрана (возможно, слишком большой файл)",
+				"user", pageCtx.LoginName, "err", err)
+			http.Error(w, i18n.Get(pageCtx.Lang, "ERR_PHOTO_TOO_BIG"), http.StatusRequestEntityTooLarge)
+			return
+		}
+
 		newMessage := r.FormValue("new_message")
 
 		var photoURL, photoFIO, photoPost string
@@ -87,45 +97,34 @@ func NewMessagePost() http.HandlerFunc {
 			photoFIO = strings.TrimSpace(r.FormValue("photo_fio"))
 			photoPost = strings.TrimSpace(r.FormValue("photo_post"))
 
-			// 1. Пытаемся получить файл из формы
+			// Файл необязателен: новость может быть и без фотографии.
 			file, header, err := r.FormFile("photo_file")
-			if err == nil { // Если файл был прикреплен и ошибки нет
+			if err == nil {
 				defer file.Close()
 
-				// 2. Достаем оригинальное расширение (например, ".jpg", ".png")
-				ext := filepath.Ext(header.Filename)
-
-				// 3. Формируем безопасное имя файла на основе PHOTO_FIO
-				// Заменяем пробелы на подчеркивания, чтобы избежать проблем в URL
-				safeFIO := strings.ReplaceAll(photoFIO, " ", "_")
-
-				// Чтобы файлы не перезаписывались, можно добавить отметку времени:
-				// fileName := fmt.Sprintf("%s_%d%s", safeFIO, time.Now().Unix(), ext)
-				fileName := safeFIO + ext
-
-				// Полный путь для сохранения на сервере
-				uploadDir := "static/photos/"
-				dstPath := filepath.Join(uploadDir, fileName)
-
-				// 4. Создаем файл на диске сервера
-				dst, err := os.Create(dstPath)
-				if err != nil {
-					slog.Error("Не удалось создать файл на диске", "err", err)
-					http.Error(w, "Ошибка сохранения файла", http.StatusInternalServerError)
+				// Имя файла, расширение и Content-Type из формы НЕ используются
+				// вовсе — всё решает содержимое, см. web/photo_upload.go.
+				// header нужен только для лога.
+				name, err := savePhoto(photoUploadDir, file)
+				switch {
+				case err == errPhotoType:
+					slog.Warn("[NewMessage] отклонён файл: содержимое не похоже на картинку",
+						"user", pageCtx.LoginName, "filename", header.Filename, "size", header.Size)
+					http.Error(w, i18n.Get(pageCtx.Lang, "ERR_PHOTO_TYPE"), http.StatusBadRequest)
 					return
-				}
-				defer dst.Close()
-
-				// 5. Копируем содержимое загруженного файла в созданный файл на диске
-				if _, err := io.Copy(dst, file); err != nil {
-					slog.Error("Ошибка при копировании файла", "err", err)
-					http.Error(w, "Ошибка записи файла", http.StatusInternalServerError)
+				case err != nil:
+					slog.Error("[NewMessage] не удалось сохранить фото",
+						"user", pageCtx.LoginName, "filename", header.Filename, "err", err)
+					http.Error(w, i18n.Get(pageCtx.Lang, "ERR_PHOTO_SAVE"), http.StatusInternalServerError)
 					return
 				}
 
-				// В базу данных мы сохраняем ТОЛЬКО имя файла (например, "Ivanov_II.jpg")
-				// Префикс "static/photos/" ваш Go-код шага 2 подставит автоматически при чтении!
-				photoURL = fileName
+				slog.Info("[NewMessage] фото принято",
+					"stored", name, "orig", header.Filename, "size", header.Size, "user", pageCtx.LoginName)
+
+				// В БД пишем ТОЛЬКО имя файла: префикс static/photos/
+				// подставляется при чтении ленты (service.GetAllMessage).
+				photoURL = name
 			}
 		}
 
@@ -142,8 +141,8 @@ func NewMessagePost() http.HandlerFunc {
 		)
 
 		if err != nil {
-			slog.Error("Ошибка выполнения reg.new_message", "err", err)
-			http.Error(w, "Ошибка связи с базой данных: "+err.Error(), http.StatusInternalServerError)
+			slog.Error("Ошибка выполнения reg.new_message", "user", pageCtx.LoginName, "err", err)
+			http.Error(w, i18n.Get(pageCtx.Lang, "ERR_DB"), http.StatusInternalServerError)
 			return
 		}
 

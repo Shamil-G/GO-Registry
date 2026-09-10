@@ -1,0 +1,36 @@
+# Окончания строк: везде LF — и в репозитории, и в рабочей копии.
+#
+# Без этого файла всё решает локальная настройка core.autocrlf, а она у каждого
+# своя: при core.autocrlf=true git на checkout ставит CRLF, а на commit
+# конвертирует обратно, и на каждую команду печатает
+# "LF will be replaced by CRLF the next time Git touches it".
+# .gitattributes сильнее core.autocrlf и одинаково работает у всех, кто
+# склонирует репозиторий.
+* text=auto eol=lf
+
+# Исключения — файлы, которым CRLF нужен по существу.
+#
+# .bat исполняет cmd.exe; с LF он в большинстве случаев работает, но на
+# многострочных конструкциях ведёт себя непредсказуемо. Оставляем как есть.
+*.bat text eol=crlf
+
+# Пакеты PL/SQL сохраняет PL/SQL Developer: он пишет в cp1251 и с CRLF.
+# -text означает "не трогать вообще": ни перекодировки, ни нормализации.
+*.pck -text
+*.pkb -text
+*.pks -text
+
+# Бинарное — не нормализовать и не показывать в diff как текст.
+*.exe binary
+*.dll binary
+*.xlsx binary
+*.xls binary
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.tgz binary
+*.zip binary

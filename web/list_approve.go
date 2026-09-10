@@ -11,6 +11,7 @@ import (
 
 	"gusseynov/GO-Registry/config"
 	"gusseynov/GO-Registry/middleware"
+	service "gusseynov/GO-Registry/service"
 	"gusseynov/GO-Registry/service/i18n"
 	"gusseynov/GO-Registry/storage"
 )
@@ -148,39 +149,21 @@ func ListToApproveGet() http.HandlerFunc {
 // RefuseTimeOffPost отклоняет заявку сотрудника (POST /refuse-time-off)
 func RefuseTimeOffPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// 1. Контроль авторизации и прав руководителя через единый контекст
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
 
-		// Дополнительный щит: если это не босс и не админ, рубим запрос сразу
-		if !pageCtx.IsBoss {
-			slog.Error("Отказ в доступе к процедуре отклонения", "user", pageCtx.LoginName)
-			http.Error(w, "Доступ запрещен", http.StatusForbidden)
-			return
-		}
-		// 2. Считываем ID из POST-параметра формы
-		idStr := r.FormValue("id")
-		id, err := strconv.Atoi(idStr)
-		if err != nil || id <= 0 {
-			slog.Warn("Некорректный ID в POST-запросе отказа", "id_str", idStr)
-			http.Error(w, "Неверный идентификатор записи", http.StatusBadRequest)
+		// Права, идентификатор и принадлежность заявки — одной проверкой.
+		id, ok := approvalTarget(w, r, "refuse")
+		if !ok {
 			return
 		}
 
-		slog.Debug("Запуск процедуры reg.refuse_time_off", "id_reg", id, "boss", pageCtx.FIO, "ip", pageCtx.IP)
-
-		// 3. Вызываем оригинальную хранимую процедуру отказа в Oracle
-		// query := `BEGIN reg.refuse_time_off(:1, :2); END;`
-
-		// // _, err = storage.DB.ExecContext(r.Context(), query, id, pageCtx.FIO)
-		err = storage.DBExec(r.Context(), "reg.refuse_time_off", id, pageCtx.FIO)
-		if err != nil {
-			http.Error(w, "Ошибка базы данных при отклонении: "+err.Error(), http.StatusInternalServerError)
+		if err := storage.DBExec(r.Context(), "reg.refuse_time_off", id, pageCtx.FIO); err != nil {
+			slog.Error("[Approve] ошибка reg.refuse_time_off", "id_reg", id, "boss", pageCtx.FIO, "err", err)
+			http.Error(w, i18n.Get(pageCtx.Lang, "ERR_DB"), http.StatusInternalServerError)
 			return
 		}
 
-		slog.Debug("Заявка отклонена", "id_reg", id, "boss", pageCtx.FIO)
-
-		// 4. Редирект обратно в панель с параметром отказа
+		slog.Info("[Approve] заявка отклонена", "id_reg", id, "boss", pageCtx.FIO, "ip", pageCtx.IP)
 		http.Redirect(w, r, "/list-to-approve?msg=refused", http.StatusSeeOther)
 	}
 }
@@ -188,42 +171,78 @@ func RefuseTimeOffPost() http.HandlerFunc {
 // ApproveTimeOffPost одобряет заявку сотрудника (POST /approve-time-off)
 func ApproveTimeOffPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// 1. Контроль авторизации и прав руководителя через единый контекст мидлвари Authorize
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
 
-		// Дополнительный щит безопасности: если это не босс и не админ, рубим запрос сразу
-		if !pageCtx.IsBoss {
-			slog.Error("Отказ в доступе к процедуре одобрения", "user", pageCtx.LoginName)
-			http.Error(w, "Доступ запрещен. Вы не являетесь руководителем.", http.StatusForbidden)
+		id, ok := approvalTarget(w, r, "approve")
+		if !ok {
 			return
 		}
 
-		// 2. Считываем ID из POST-параметра формы
-		idStr := r.FormValue("id")
-		id, err := strconv.Atoi(idStr)
-		if err != nil || id <= 0 {
-			slog.Warn("Некорректный ID в POST-запросе согласования", "id_str", idStr)
-			http.Error(w, "Неверный идентификатор записи", http.StatusBadRequest)
+		if err := storage.DBExec(r.Context(), "reg.approve_time_off", id, pageCtx.FIO); err != nil {
+			slog.Error("[Approve] ошибка reg.approve_time_off", "id_reg", id, "boss", pageCtx.FIO, "err", err)
+			http.Error(w, i18n.Get(pageCtx.Lang, "ERR_DB"), http.StatusInternalServerError)
 			return
 		}
 
-		clientIP := middleware.GetIPFromContext(r.Context())
-		slog.Debug("Запуск процедуры reg.approve_time_off", "id_reg", id, "boss", pageCtx.FIO, "ip", clientIP)
-
-		// 3. Вызываем оригинальную хранимую процедуру пакета Oracle
-		// query := `BEGIN reg.approve_time_off(:1, :2); END;`
-
-		// Передаем ID (:1) и Полное ФИО босса (:2) строго по контракту
-		// _, err = storage.DB.ExecContext(r.Context(), query, id, pageCtx.FIO)
-		err = storage.DBExec(r.Context(), "reg.approve_time_off", id, pageCtx.FIO)
-		if err != nil {
-			http.Error(w, "Ошибка базы данных при согласовании: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		slog.Debug("Заявка успешно одобрена", "id_reg", id, "boss", pageCtx.FIO)
-
-		// 4. Редирект обратно в панель с параметром успеха
+		slog.Info("[Approve] заявка согласована", "id_reg", id, "boss", pageCtx.FIO, "ip", pageCtx.IP)
 		http.Redirect(w, r, "/list-to-approve?msg=approved", http.StatusSeeOther)
 	}
+}
+
+// approvalTarget — проверка «эта заявка вообще из моей епархии».
+//
+// Одна на согласование и на отказ: расходиться этим двум проверкам нельзя, а
+// два скопированных куска расходятся всегда. Возвращает false, если ответ уже
+// отправлен клиенту.
+//
+// Зачем вообще: id заявки лежит скрытым полем формы на /list-to-approve.
+// Проверки !pageCtx.IsBoss на входе недостаточно — она отвечает на вопрос
+// «руководитель ли ты», а не «твой ли это сотрудник». До этой правки директор
+// департамента А, поправив value в инспекторе браузера, согласовывал заявку
+// департамента Б. Список при этом фильтровался правильно — но список это
+// вёрстка, а не право.
+func approvalTarget(w http.ResponseWriter, r *http.Request, action string) (int, bool) {
+	pageCtx := middleware.GetOrCreatePageCtx(r.Context())
+	lang := pageCtx.Lang
+
+	if !pageCtx.IsBoss {
+		slog.Warn("[Approve] отказ: не руководитель", "action", action, "user", pageCtx.LoginName, "post", pageCtx.Post)
+		http.Error(w, i18n.Get(lang, "ERR_NOT_BOSS"), http.StatusForbidden)
+		return 0, false
+	}
+
+	id, err := strconv.Atoi(strings.TrimSpace(r.FormValue("id")))
+	if err != nil || id <= 0 {
+		slog.Warn("[Approve] некорректный идентификатор заявки",
+			"action", action, "id_str", r.FormValue("id"), "user", pageCtx.LoginName)
+		http.Error(w, i18n.Get(lang, "ERR_BAD_ID"), http.StatusBadRequest)
+		return 0, false
+	}
+
+	depName, employee, found, err := service.RegisterDep(r.Context(), id)
+	if err != nil {
+		slog.Error("[Approve] не удалось прочитать заявку", "action", action, "id_reg", id, "err", err)
+		http.Error(w, i18n.Get(lang, "ERR_DB"), http.StatusInternalServerError)
+		return 0, false
+	}
+	if !found {
+		// Штатный случай: заявку уже удалили или согласовали с другой вкладки.
+		slog.Info("[Approve] заявка не найдена (устаревшая страница)",
+			"action", action, "id_reg", id, "user", pageCtx.LoginName)
+		http.Error(w, i18n.Get(lang, "ERR_REQUEST_NOT_FOUND"), http.StatusNotFound)
+		return 0, false
+	}
+
+	if !pageCtx.Scope().Allows(depName) {
+		// Warn: событие аудита. В списке этой заявки не было, значит форму
+		// правили руками.
+		slog.Warn("[Approve] попытка решить заявку чужого департамента",
+			"action", action, "id_reg", id, "request_dep", depName, "employee", employee,
+			"user", pageCtx.LoginName, "user_dep", pageCtx.DepName,
+			"scope", pageCtx.Scope().Departments, "ip", pageCtx.IP)
+		http.Error(w, i18n.Get(lang, "ERR_OTHER_DEPARTMENT"), http.StatusForbidden)
+		return 0, false
+	}
+
+	return id, true
 }

@@ -44,3 +44,21 @@ func IsHR(userDep string) bool {
 	}
 	return false
 }
+
+// IsSecurity — относится ли департамент сотрудника к службе безопасности.
+//
+// СБ ведёт свой список отсутствий (/secure-time-off) и отслеживает приход на
+// работу, поэтому раздел закрыт именно по департаменту, а не по должности:
+// в СБ этим занимается не только руководитель.
+//
+// Пустой SECURITY_DEPARTMENT означает «никто» — раздел остаётся у
+// супер-администраторов. Это осознанный дефолт: лучше лишний раз позвать
+// администратора, чем открыть чужой список всем.
+func IsSecurity(userDep string) bool {
+	for _, secDep := range Cfg.SecurityList {
+		if strings.EqualFold(strings.TrimSpace(userDep), strings.TrimSpace(secDep)) {
+			return true
+		}
+	}
+	return false
+}

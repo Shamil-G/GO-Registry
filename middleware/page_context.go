@@ -5,7 +5,6 @@ package middleware
 import (
 	"context"
 	"log/slog"
-	"net"
 	"net/http"
 	"strings"
 
@@ -88,7 +87,13 @@ func PageContext(next http.Handler) http.Handler {
 		// 7. Сохраняем и контекст страницы, и сам IP в context запроса (на случай, если IP нужен в логике)
 		ctx := SavePageCtx(r.Context(), page)
 
-		slog.Info("[PCTX]", "REAL USER. LoginName", page.LoginName, "IP", page.IP, "FIO", page.FIO, "DepName", page.DepName,
+		// Минимальная диагностика на Info — см. middleware/session_log.go.
+		logSessionStart(page.LoginName, page.IP,
+			"fio", page.FIO, "dep", page.DepName,
+			"isBoss", page.IsBoss, "isAdmin", page.IsAdmin)
+		logMutation(r, page.LoginName, page.IP)
+
+		slog.Debug("[PCTX] REAL USER", "LoginName", page.LoginName, "IP", page.IP, "FIO", page.FIO, "DepName", page.DepName,
 			"THEME", page.Theme, "LANG", page.Lang, "IsBoss", page.IsBoss, "IsAdmin", isAdmin, "Post", page.Post,
 			"SUBORDINATE", page.SubordinateOU)
 
@@ -98,27 +103,4 @@ func PageContext(next http.Handler) http.Handler {
 
 func GetIPFromContext(ctx context.Context) string {
 	return GetOrCreatePageCtx(ctx).IP
-}
-
-func GetClientIP(r *http.Request) string {
-	// 1. Сначала смотрим X-Forwarded-For, чтобы получить всю цепочку: "IP_юзера, IP_прокси1, IP_прокси2"
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		return strings.TrimSpace(xff)
-	}
-
-	// 2. Если цепочки нет, берем то, что Nginx зафиксировал напрямую
-	if ip := r.Header.Get("X-Real-IP"); ip != "" {
-		return strings.TrimSpace(ip)
-	}
-
-	// 3. Резервный вариант для локальной разработки (в обход Nginx)
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err == nil {
-		if host == "::1" {
-			return "127.0.0.1"
-		}
-		return host
-	}
-
-	return r.RemoteAddr
 }

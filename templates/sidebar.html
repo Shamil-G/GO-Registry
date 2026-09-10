@@ -22,6 +22,70 @@
             word-break: break-word;   /* Защита от разрыва сетки длинными словами/ссылками */
         }
 
+        /* Каждая новость — свой контейнер с системой координат: кнопка
+           удаления висит в его правом верхнем углу, а не в потоке текста. */
+        .news-container .news-item {
+            position: relative;
+        }
+        /* Место под крестик отводится ТОЛЬКО там, где он есть: иначе чужие
+           новости теряли бы 20 пикселей ширины ни за что. :has() в проекте
+           уже используется (styles.css, article:has(article_info)). */
+        .news-container .news-item:has(.inline-form-del-news) {
+            padding-right: 20px;
+        }
+        /* Сброс глобального стиля form (styles.css: padding 24px, фон и
+           рамка) — иначе форма из одной кнопки раздувается в светлый
+           прямоугольник 58x67 и наезжает на текст новости. Тот же приём, что
+           у .inline-form-del в templates/time_off.html. */
+        .news-container .inline-form-del-news {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            display: block;
+            margin: 0;
+            padding: 0;
+            background: none;
+            border: none;
+            line-height: 0;
+            z-index: 1;
+        }
+        /* Крестик, а не кнопка с подписью: лента читается куда чаще, чем
+           правится, и 15 пикселей в углу не должны спорить с текстом за
+           внимание. Что это именно удаление — в title и aria-label.
+           Цвет взят из .btn-danger (templates/time_off.html), чтобы красный
+           в проекте был один. */
+        .news-container .btn-del-news {
+            padding: 0;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1;
+            border: 1px solid transparent;
+            border-radius: 50%;
+            background: none;
+            color: #e63946;
+            opacity: 0.55;
+            cursor: pointer;
+            transition: opacity 0.15s ease, background-color 0.15s ease;
+        }
+        /* Пока на новость не навели — крестик почти не виден; наведение на
+           саму новость его проявляет. На тач-экранах hover не срабатывает,
+           поэтому базовая прозрачность не нулевая. */
+        .news-container .news-item:hover .btn-del-news {
+            opacity: 1;
+        }
+        .news-container .btn-del-news:hover {
+            background-color: #e63946;
+            color: #fff;
+            /* Глобальное button:hover сдвигает кнопку и вешает тень —
+               для крестика в углу это лишнее. */
+            transform: none;
+            box-shadow: none;
+            text-shadow: none;
+        }
+
         /* Корректируем тег <pre> для веток без фото, чтобы он тоже тянулся по ширине и переносил слова */
         .news-container pre {
             text-align: justify;
@@ -45,6 +109,19 @@
                     <!-- Используем ваш родной класс .scroll-x-y и добавляем ему высоту, как в первой таблице -->
                     <div class="scroll-x-y" style="max-height: calc(100vh - 165px) !important;">
                         {{ range .AllMessages }}
+                        <div class="news-item">
+                            {{ if .CanDelete }}
+                            <!-- Кнопка видна только автору новости. Это удобство,
+                                 а не право: реальная проверка — в web.DelMessagePost
+                                 и в самой reg.del_message. -->
+                            <form method="POST" action="/del-message" class="inline-form-del-news"
+                                  onsubmit="return confirm('{{ res_value "CONFIRM_REMOVE_MESSAGE" }}');">
+                                <input type="hidden" name="id_mess" value="{{ .IDMessage }}">
+                                <button class="btn-del-news" type="submit"
+                                        title="{{ res_value "REMOVE_MESSAGE" }}"
+                                        aria-label="{{ res_value "REMOVE_MESSAGE" }}">&times;</button>
+                            </form>
+                            {{ end }}
                             <!-- Проверка наличия фотографии -->
                             {{ if and .PhotoURL (gt (len .PhotoURL) 3) }}
                             <div style="margin: 5px 10px; display: block;">
@@ -72,6 +149,7 @@
                             {{ end }}   
                             <br>                    
                             <hr style="margin-top: 5px; margin-bottom: 10px; border: 0; border-top: 1px solid var(--card-border);">                             
+                        </div>
                         {{ end }}
                     </div>
                 </td>
