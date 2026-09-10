@@ -1,0 +1,184 @@
+{
+  "title": "СЕРВИСЫ — общий обзор",
+  "description": "Registry, Court и SSO на одном экране. Метрики у Registry и Court совпадают до последней метки (оба из одного шаблона metrics/), поэтому работают все блоки. У SSO своя схема — memory_*, api_*_duration_ms, — так что по нему заполнены только панели HTTP, а блоки базы и SSO остаются пустыми; детали по нему в отдельном дашборде sso-grafana.json.",
+  "tags": ["registry", "court", "overview"],
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-3h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "label": "Сервис",
+        "type": "custom",
+        "query": "registry,court,sso",
+        "options": [
+          { "text": "registry", "value": "registry", "selected": false },
+          { "text": "court", "value": "court", "selected": false },
+          { "text": "sso", "value": "sso", "selected": false }
+        ],
+        "includeAll": true,
+        "multi": true,
+        "current": { "text": ["All"], "value": ["$__all"], "selected": true }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Запросы в секунду",
+      "description": "Нагрузка по сервисам. Статика исключена: она отдаётся FileServer-ом и о работе людей ничего не говорит.",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 7 },
+      "targets": [
+        {
+          "expr": "sum by (service) (rate(http_requests_total{service=~\"$service\", path!~\"/static.*\"}[1m]))",
+          "legendFormat": "{{service}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Средняя задержка, мс",
+      "description": "Сумма длительностей делится на количество запросов — среднее по сервису целиком.",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 7 },
+      "targets": [
+        {
+          "expr": "sum by (service) (rate(http_request_duration_ms_sum{service=~\"$service\", path!~\"/static.*\"}[1m])) / sum by (service) (rate(http_request_duration_ms_count{service=~\"$service\", path!~\"/static.*\"}[1m]))",
+          "legendFormat": "{{service}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Ошибки HTTP за 5 минут",
+      "gridPos": { "x": 0, "y": 7, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (service, code) (increase(http_errors_total{service=~\"$service\", path!~\"/static.*\"}[5m]))",
+          "legendFormat": "{{service}} — {{code}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Ошибки базы за 5 минут",
+      "description": "Метка error — код вида ORA-01722, а не полный текст ошибки: полный текст лежит в логе сервиса.",
+      "gridPos": { "x": 12, "y": 7, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (service, error) (increase(db_sp_errors_total{service=~\"$service\"}[5m]))",
+          "legendFormat": "{{service}} процедуры — {{error}}"
+        },
+        {
+          "expr": "sum by (service, error) (increase(db_select_errors_total{service=~\"$service\"}[5m]))",
+          "legendFormat": "{{service}} выборки — {{error}}"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "HTTP — десять самых нагруженных страниц",
+      "gridPos": { "x": 0, "y": 13, "w": 24, "h": 7 },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (service, path) (rate(http_requests_total{service=~\"$service\", path!~\"/static.*\"}[5m])))",
+          "legendFormat": "{{service}} {{path}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP — задержка по страницам, мс",
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 7 },
+      "targets": [
+        {
+          "expr": "sum by (service, path) (rate(http_request_duration_ms_sum{service=~\"$service\", path!~\"/static.*\"}[1m])) / sum by (service, path) (rate(http_request_duration_ms_count{service=~\"$service\", path!~\"/static.*\"}[1m]))",
+          "legendFormat": "{{service}} {{path}}"
+        }
+      ]
+    },
+
+    {
+      "type": "stat",
+      "title": "Пул БД — в работе",
+      "gridPos": { "x": 0, "y": 27, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "db_pool_in_use_connections{service=~\"$service\"}", "legendFormat": "{{service}}" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Пул БД — простаивают",
+      "gridPos": { "x": 6, "y": 27, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "db_pool_idle_connections{service=~\"$service\"}", "legendFormat": "{{service}}" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Пул БД — открыто",
+      "gridPos": { "x": 12, "y": 27, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "db_pool_open_connections{service=~\"$service\"}", "legendFormat": "{{service}}" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Пул БД — потолок",
+      "description": "Метрику отдаёт только GO-Court; у registry её нет, и панель по нему остаётся пустой.",
+      "gridPos": { "x": 18, "y": 27, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "db_pool_max_open_connections{service=~\"$service\"}", "legendFormat": "{{service}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "БД — длительность процедур, мс",
+      "gridPos": { "x": 0, "y": 31, "w": 12, "h": 7 },
+      "targets": [
+        {
+          "expr": "sum by (service, procedure) (rate(db_sp_duration_ms_sum{service=~\"$service\"}[1m])) / sum by (service, procedure) (rate(db_sp_duration_ms_count{service=~\"$service\"}[1m]))",
+          "legendFormat": "{{service}} {{procedure}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "БД — длительность выборок, мс",
+      "gridPos": { "x": 12, "y": 31, "w": 12, "h": 7 },
+      "targets": [
+        {
+          "expr": "sum by (service, query) (rate(db_select_duration_ms_sum{service=~\"$service\"}[1m])) / sum by (service, query) (rate(db_select_duration_ms_count{service=~\"$service\"}[1m]))",
+          "legendFormat": "{{service}} {{query}}"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "SSO — обращений в секунду",
+      "description": "CheckSession вызывается на каждый запрос страницы, поэтому линия примерно повторяет верхний график нагрузки.",
+      "gridPos": { "x": 0, "y": 38, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (service, endpoint, code) (rate(sso_requests_total{service=~\"$service\"}[1m]))",
+          "legendFormat": "{{service}} {{endpoint}} — {{code}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "SSO — задержка, мкс",
+      "description": "Здесь микросекунды, а не миллисекунды: SSO отвечает быстро, и в мс график был бы прижат к нулю.",
+      "gridPos": { "x": 12, "y": 38, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (service, endpoint) (rate(sso_request_duration_us_sum{service=~\"$service\"}[1m])) / sum by (service, endpoint) (rate(sso_request_duration_us_count{service=~\"$service\"}[1m]))",
+          "legendFormat": "{{service}} {{endpoint}}"
+        }
+      ]
+    }
+  ]
+}

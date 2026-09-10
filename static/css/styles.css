@@ -958,3 +958,77 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
 .hidden {
     visibility: hidden;
 }
+
+/* ==========================================================================
+   ПОДТВЕРЖДЕНИЕ ОПАСНЫХ ДЕЙСТВИЙ (10.09.2026)
+   Перенесено из GO-Court: окно подтверждения должно выглядеть одинаково во
+   всех проектах. Разметка и скрипт — в templates/base.html.
+   ========================================================================== */
+
+.op-confirm {
+    padding: 0;
+    max-width: 52ch;
+    color: var(--fg);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.28);
+}
+
+.op-confirm::backdrop {
+    background: rgba(0, 0, 0, 0.38);
+}
+
+/* Гасим общее правило form{padding:24px; background:var(--form-background);
+   border:...} — внутри диалога форма это только способ закрыть его кнопкой
+   (method="dialog"), а не полноразмерная форма страницы. */
+.op-confirm form {
+    margin: 0;
+    padding: 18px 20px;
+    border: none;
+    background: none;
+}
+
+.op-confirm-title {
+    margin: 0 0 10px 0;
+    font-size: 17px;
+}
+
+.op-confirm-text {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+/* Содержимое удаляемой записи — подписью под вопросом: мельче и приглушённо,
+   чтобы не спорить за внимание с самим вопросом. Длинные значения переносим,
+   иначе диалог растянется по ширине экрана. */
+.op-confirm-detail {
+    margin: 10px 0 0 0;
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1.35;
+    opacity: 0.75;
+    border-radius: 4px;
+    background: rgba(128, 128, 128, 0.12);
+    overflow-wrap: anywhere;
+}
+
+.op-confirm-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+/* Кнопка самого действия — красная, чтобы отличалась от "Отмены" не только
+   текстом. Специфичность выше, чем у общего .btn, поэтому !important не нужен. */
+.op-confirm .op-confirm-danger {
+    color: #ffffff;
+    background: #c62828;
+    border-color: #8e1f1f;
+}
+
+.op-confirm .op-confirm-danger:hover {
+    background: #a81f1f;
+}

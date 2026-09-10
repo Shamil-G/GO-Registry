@@ -114,8 +114,15 @@
                             <!-- Кнопка видна только автору новости. Это удобство,
                                  а не право: реальная проверка — в web.DelMessagePost
                                  и в самой reg.del_message. -->
+                            <!-- data-confirm вместо onsubmit="confirm(...)": окно
+                                 подтверждения рисует сама страница, см. base.html.
+                                 data-confirm-detail — текст удаляемой новости: в
+                                 ленте нет таблицы, из строки которой его можно
+                                 было бы собрать автоматически. -->
                             <form method="POST" action="/del-message" class="inline-form-del-news"
-                                  onsubmit="return confirm('{{ res_value "CONFIRM_REMOVE_MESSAGE" }}');">
+                                  data-confirm="{{ res_value "CONFIRM_REMOVE_MESSAGE" }}"
+                                  data-confirm-ok="{{ res_value "REMOVE" }}"
+                                  data-confirm-detail="{{ .Message }}">
                                 <input type="hidden" name="id_mess" value="{{ .IDMessage }}">
                                 <button class="btn-del-news" type="submit"
                                         title="{{ res_value "REMOVE_MESSAGE" }}"

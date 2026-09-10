@@ -101,8 +101,13 @@
                 <!-- Безопасное удаление -->
                 <td style="text-align: center;">
                     {{ if or (lt .CntDays 2) (ne .Status 1) }}
-                        <!-- Класс .inline-form-del спасает ячейку от раздувания формы -->
-                        <form method="POST" action="/del-from-list-time-off" class="inline-form-del">
+                        <!-- Класс .inline-form-del спасает ячейку от раздувания формы.
+                             data-confirm — окно подтверждения страницы (см. base.html);
+                             что именно удаляется, оно соберёт из ячеек этой строки само,
+                             поэтому data-confirm-detail здесь не нужен. -->
+                        <form method="POST" action="/del-from-list-time-off" class="inline-form-del"
+                              data-confirm="{{ res_value "CONFIRM_REMOVE_TIME_OFF" }}"
+                              data-confirm-ok="{{ res_value "REMOVE" }}">
                             <input type="hidden" name="id" value="{{ .ID }}">
                             <button class="btn-danger" type="submit">
                                 {{ res_value "REMOVE" }}

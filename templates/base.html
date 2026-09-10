@@ -101,5 +101,117 @@
     </footer>
 
 </common-container>
+
+<!-- Подтверждение опасных действий (10.09.2026).
+     Перенесено из GO-Court (templates/base.html), чтобы окно было одно и то же
+     во всех проектах.
+
+     Раньше подтверждение делал браузерный confirm(): системное окно с адресом
+     сайта в заголовке, не переводится, не оформляется и в части браузеров
+     выглядит как предупреждение о мошенничестве. Теперь это обычный диалог
+     страницы: текст приходит из data-confirm самой формы, подпись кнопки
+     действия — из data-confirm-ok, а под текстом показывается то, что
+     собираются удалить.
+
+     Формы при этом остались обычными формами с POST — диалог только решает,
+     отправлять её или нет. В браузере без <dialog> подтверждение возвращается
+     к confirm(): хуже на вид, но действие всё равно не выполнится молча. -->
+<dialog id="opConfirm" class="op-confirm">
+    <form method="dialog">
+        <h3 class="op-confirm-title">{{ res_value "CONFIRM_TITLE" }}</h3>
+        <p class="op-confirm-text" id="opConfirmText"></p>
+        <p class="op-confirm-detail" id="opConfirmDetail" hidden></p>
+        <div class="op-confirm-buttons">
+            <!-- "Отмена" первой и с autofocus: Enter и Esc должны уводить из
+                 опасного действия, а не выполнять его. -->
+            <button class="btn" type="submit" value="cancel" autofocus>{{ res_value "BUTTON_CANCEL" }}</button>
+            <button class="btn op-confirm-danger" type="submit" value="ok" id="opConfirmOk">{{ res_value "REMOVE" }}</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+/*
+   Подтверждение опасных действий — общее для всех страниц.
+
+   Как пользоваться из разметки:
+
+     data-confirm="<вопрос>"        — форма не отправляется, пока человек не
+                                      подтвердит; обязателен, остальное нет;
+     data-confirm-ok="<подпись>"    — подпись кнопки действия ("Удалить");
+                                      по умолчанию — та, что стоит в окне;
+     data-confirm-detail="<текст>"  — что именно затрагивается. Если не задан, а
+                                      форма лежит в строке таблицы, текст
+                                      собирается из ячеек этой строки.
+
+   Обработчик один на весь документ, поэтому работает и для форм, которых на
+   момент загрузки страницы не было.
+*/
+(function () {
+    'use strict';
+
+    var box = document.getElementById('opConfirm');
+    var textEl = document.getElementById('opConfirmText');
+    var detailEl = document.getElementById('opConfirmDetail');
+    var okEl = document.getElementById('opConfirmOk');
+    var okLabel = okEl ? okEl.textContent : '';
+    var pendingForm = null;
+
+    // Что именно затрагиваем — по умолчанию берём прямо из строки таблицы, а не
+    // из скрытых полей формы: человек видит в окне ровно тот текст, что и в
+    // строке. Ячейку с самой кнопкой пропускаем.
+    function rowSummary(form) {
+        var row = form.closest('tr');
+        if (!row || !row.cells) { return ''; }
+        var parts = [];
+        Array.prototype.forEach.call(row.cells, function (cell) {
+            if (cell.contains(form)) { return; }
+            var text = (cell.textContent || '').replace(/\s+/g, ' ').trim();
+            if (text) { parts.push(text); }
+        });
+        var text = parts.join(' · ');
+        return text.length > 160 ? text.slice(0, 160) + '…' : text;
+    }
+
+    function askConfirm(form) {
+        var question = form.dataset.confirm || '';
+
+        // Браузер без <dialog> (или окна нет в разметке) — прежний confirm().
+        // Некрасиво, но лучше, чем действие без вопроса.
+        if (!box || !box.showModal) {
+            if (window.confirm(question)) { form.submit(); }
+            return;
+        }
+
+        textEl.textContent = question;
+        var detail = form.dataset.confirmDetail || rowSummary(form);
+        detailEl.textContent = detail;
+        detailEl.hidden = detail === '';
+        if (okEl) { okEl.textContent = form.dataset.confirmOk || okLabel; }
+        pendingForm = form;
+        box.showModal();
+    }
+
+    document.addEventListener('submit', function (ev) {
+        var form = ev.target;
+        if (!form || !form.dataset || !form.dataset.confirm) { return; }
+        ev.preventDefault();
+        askConfirm(form);
+    });
+
+    if (box) {
+        // close приходит и от кнопок (method="dialog" кладёт value кнопки в
+        // returnValue), и от Esc (returnValue пустой) — один обработчик
+        // закрывает все случаи. form.submit(), а не requestSubmit(): submit()
+        // отправляет форму, не поднимая событие submit заново, иначе окно
+        // открывалось бы по кругу.
+        box.addEventListener('close', function () {
+            var form = pendingForm;
+            pendingForm = null;
+            if (box.returnValue === 'ok' && form) { form.submit(); }
+        });
+    }
+})();
+</script>
 </body>
 </html>

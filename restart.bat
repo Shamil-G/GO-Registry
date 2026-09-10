@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
 REM Port is set in .env (DEV_PORT/PROD_PORT). Change here if you change it there.
-set PORT=5152
+set PORT=8080
 
 echo ===============================================
 echo   Stopping process holding port %PORT%

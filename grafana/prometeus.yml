@@ -24,3 +24,18 @@ scrape_configs:
           service: 'registry'
           env: 'prod'
 
+  # GO-Court. Метрики и их метки совпадают с registry один в один (оба проекта
+  # из одного шаблона metrics/), поэтому обе системы ложатся на общий дашборд
+  # grafana/all-services-grafana.json — различает их метка service.
+  #
+  # Цель — внешний адрес за nginx: сам сервис слушает 127.0.0.1:5152 и снаружи
+  # недоступен. Если nginx не проксирует /metrics для этого адреса, добавить
+  # ему location — либо, если Prometheus стоит на той же машине, поменять цель
+  # на 127.0.0.1:5152.
+  - job_name: 'go_court'
+    static_configs:
+      - targets: ['192.168.1.34:8180']
+        labels:
+          service: 'court'
+          env: 'prod'
+
