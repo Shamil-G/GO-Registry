@@ -27,6 +27,8 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"sync"
+	"time"
 
 	"gusseynov/GO-Registry/config"
 	mdw "gusseynov/GO-Registry/middleware"
@@ -49,7 +51,7 @@ func RequireMetricsAccess(next http.Handler) http.Handler {
 			return
 		}
 
-		slog.Info("[Metrics] доступ закрыт", "ip", ip, "allowed", allowed)
+		logMetricsDenied(ip, allowed)
 
 		// Адрес показывается прямо в ответе, а не только в логе: чтобы добавить
 		// себя в список, надо знать, каким тебя видит сервис, — а за nginx это
@@ -58,4 +60,67 @@ func RequireMetricsAccess(next http.Handler) http.Handler {
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintf(w, "Доступ к /metrics закрыт.\nВаш адрес: %s\nДобавьте его в METRICS_ALLOWED_IPS в .env, если он должен быть разрешён.\n", ip)
 	})
+}
+
+// Отказы в /metrics логируются с подавлением повторов.
+//
+// Prometheus ходит сюда по расписанию (scrape_interval: 5s в
+// grafana/prometeus.yml). Если его адреса нет в списке, он получает отказ
+// КАЖДЫЕ ПЯТЬ СЕКУНД — это 17 тысяч одинаковых строк в сутки, и registry.log
+// начинает ротироваться быстрее, чем в нём успевает накопиться что-то полезное.
+// Именно так и вышло на бою 10.09.2026.
+//
+// Поэтому с одного адреса пишем не чаще раза в deniedLogEvery, а в строке
+// указываем, сколько отказов было подавлено за это время: событие остаётся
+// видимым (в том числе если кто-то методично долбится в /metrics), но лог не
+// затапливает.
+const deniedLogEvery = 10 * time.Minute
+
+// deniedLogCap — потолок на размер карты. Адресов, стучащихся в /metrics,
+// должно быть единицы; тысяча означает перебор адресов, и тогда карта просто
+// сбрасывается целиком, чтобы не расти в памяти бесконечно.
+const deniedLogCap = 1000
+
+type deniedEntry struct {
+	last       time.Time
+	suppressed int
+}
+
+var (
+	deniedMu  sync.Mutex
+	deniedLog = make(map[string]*deniedEntry)
+)
+
+func logMetricsDenied(ip string, allowed []string) {
+	deniedMu.Lock()
+
+	if len(deniedLog) > deniedLogCap {
+		deniedLog = make(map[string]*deniedEntry)
+	}
+
+	e, ok := deniedLog[ip]
+	if !ok {
+		e = &deniedEntry{}
+		deniedLog[ip] = e
+	}
+
+	if !e.last.IsZero() && time.Since(e.last) < deniedLogEvery {
+		e.suppressed++
+		deniedMu.Unlock()
+		return
+	}
+
+	suppressed := e.suppressed
+	e.suppressed = 0
+	e.last = time.Now()
+	deniedMu.Unlock()
+
+	// Запись вне блокировки: slog может писать в файл, держать под мьютексом
+	// ввод-вывод незачем.
+	if suppressed > 0 {
+		slog.Info("[Metrics] доступ закрыт", "ip", ip, "allowed", allowed,
+			"подавлено_повторов", suppressed, "за", deniedLogEvery.String())
+		return
+	}
+	slog.Info("[Metrics] доступ закрыт", "ip", ip, "allowed", allowed)
 }
