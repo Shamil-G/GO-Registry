@@ -102,10 +102,11 @@ func NewMessagePost() http.HandlerFunc {
 			if err == nil {
 				defer file.Close()
 
-				// Имя файла, расширение и Content-Type из формы НЕ используются
-				// вовсе — всё решает содержимое, см. web/photo_upload.go.
-				// header нужен только для лога.
-				name, err := savePhoto(photoUploadDir, file)
+				// Имя загруженного файла, его расширение и Content-Type из формы
+				// НЕ используются вовсе — тип определяется по содержимому, а имя
+				// собирается из photo_fio, даты и случайного хвоста (см.
+				// web/photo_upload.go). header нужен только для лога.
+				name, err := savePhoto(photoUploadDir, file, photoFIO)
 				switch {
 				case err == errPhotoType:
 					slog.Warn("[NewMessage] отклонён файл: содержимое не похоже на картинку",

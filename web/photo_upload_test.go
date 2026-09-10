@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"unicode/utf8"
 )
 
 // pngBytes — минимальный настоящий PNG (сигнатура + IHDR), достаточный для
@@ -56,7 +57,7 @@ func asMultipart(t *testing.T, filename string, content []byte) multipart.File {
 func TestSavePhotoAcceptsImage(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "photos") // каталога нет — savePhoto создаёт сам
 
-	name, err := savePhoto(dir, asMultipart(t, "фото.png", pngBytes))
+	name, err := savePhoto(dir, asMultipart(t, "фото.png", pngBytes), "Иванов Иван Иванович")
 	if err != nil {
 		t.Fatalf("savePhoto: %v", err)
 	}
@@ -64,7 +65,11 @@ func TestSavePhotoAcceptsImage(t *testing.T) {
 		t.Errorf("расширение назначено не по содержимому: %q", name)
 	}
 	if strings.Contains(name, "фото") {
-		t.Errorf("имя из формы попало в имя файла: %q", name)
+		t.Errorf("имя загруженного файла попало в имя на диске: %q", name)
+	}
+	// ФИО с карточки в имени быть ДОЛЖНО: иначе снимок не найти в каталоге.
+	if !strings.HasPrefix(name, "Иванов_Иван_Иванович_") {
+		t.Errorf("ФИО не попало в имя файла: %q", name)
 	}
 
 	got, err := os.ReadFile(filepath.Join(dir, name))
@@ -95,7 +100,7 @@ func TestSavePhotoRejectsNonImage(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			dir := t.TempDir()
 
-			if _, err := savePhoto(dir, asMultipart(t, c.filename, []byte(c.content))); err != errPhotoType {
+			if _, err := savePhoto(dir, asMultipart(t, c.filename, []byte(c.content)), "Иванов Иван"); err != errPhotoType {
 				t.Fatalf("ожидалась errPhotoType, получено: %v", err)
 			}
 
@@ -111,12 +116,12 @@ func TestSavePhotoRejectsNonImage(t *testing.T) {
 }
 
 // TestPhotoFileNameUnique — имена не должны сталкиваться: раньше файл назывался
-// по ФИО с карточки, и вторая загрузка молча затирала снимок в уже
+// ровно по ФИО с карточки, и вторая загрузка молча затирала снимок в уже
 // опубликованной новости.
 func TestPhotoFileNameUnique(t *testing.T) {
 	seen := make(map[string]bool, 100)
 	for i := 0; i < 100; i++ {
-		name, err := photoFileName(".jpg")
+		name, err := photoFileName(".jpg", "Иванов Иван Иванович")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -129,5 +134,48 @@ func TestPhotoFileNameUnique(t *testing.T) {
 		if filepath.Base(name) != name {
 			t.Fatalf("имя содержит разделители пути: %q", name)
 		}
+	}
+}
+
+// TestSanitizeLabel — ФИО попадает в имя файла, а приходит оно из формы.
+// Проверяем, что читаемость сохранилась, а всё опасное отброшено.
+func TestSanitizeLabel(t *testing.T) {
+	cases := []struct {
+		name  string
+		label string
+		want  string
+	}{
+		{"обычное ФИО", "Иванов Иван Иванович", "Иванов_Иван_Иванович"},
+		{"инициалы с точками", "Иванов И. И.", "Иванов_И_И"},
+		{"латиница", "Ivanov Ivan", "Ivanov_Ivan"},
+		{"лишние пробелы по краям", "  Иванов Иван  ", "Иванов_Иван"},
+		{"дефис в фамилии", "Петров-Водкин Кузьма", "Петров-Водкин_Кузьма"},
+
+		// Ради этого всё и затевалось: ни точек, ни слэшей в имени файла.
+		{"попытка выйти из каталога", "../../templates/base", "templatesbase"},
+		{"обратные слэши", `..\..\windows\system32`, "windowssystem32"},
+		{"второе расширение", "photo.html", "photohtml"},
+		{"только точки", "...", ""},
+		{"пусто", "", ""},
+		{"управляющие символы", "Иванов\x00\nИван", "ИвановИван"},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := sanitizeLabel(c.label); got != c.want {
+				t.Errorf("sanitizeLabel(%q) = %q, ожидалось %q", c.label, got, c.want)
+			}
+		})
+	}
+}
+
+// TestSanitizeLabelLength — длинное ФИО не должно раздувать имя файла:
+// в файловых системах есть предел на длину, и упереться в него из-за поля
+// формы было бы обидно.
+func TestSanitizeLabelLength(t *testing.T) {
+	long := strings.Repeat("Иванов ", 40)
+	got := sanitizeLabel(long)
+	if utf8.RuneCountInString(got) > 60 {
+		t.Errorf("длина %d символов, ожидалось не больше 60: %q", utf8.RuneCountInString(got), got)
 	}
 }
