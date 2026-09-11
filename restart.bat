@@ -40,6 +40,18 @@ if errorlevel 1 (
 
 echo.
 echo ===============================================
+echo   Starting VET во всех подкаталогах
+echo ===============================================
+start "GO-Registry" go vet ./...
+
+echo.
+echo ===============================================
+echo   Starting TEST во всех подкаталогах
+echo ===============================================
+start "GO-Registry" go test ./...
+
+echo.
+echo ===============================================
 echo   Starting registry.exe
 echo ===============================================
 start "GO-Registry" registry.exe

@@ -32,7 +32,7 @@ func TestRequireMetricsAccess(t *testing.T) {
 		allowed    []string
 		proxies    []string
 		remoteAddr string
-		realIP     string // X-Real-IP, как его ставит nginx
+		xff        string // X-Forwarded-For, как его собирает nginx
 		wantCode   int
 	}{
 		{
@@ -55,37 +55,46 @@ func TestRequireMetricsAccess(t *testing.T) {
 		},
 		{
 			// Так ходит Prometheus: цель 192.168.1.34:80, то есть через nginx.
-			// Адрес сокета — локальный, настоящий приходит в X-Real-IP.
-			name:       "через доверенный прокси, разрешённый X-Real-IP",
+			// Адрес сокета — локальный, настоящий приходит в X-Forwarded-For.
+			name:       "через доверенный прокси, разрешённый адрес",
 			allowed:    []string{"192.168.20.33"},
 			proxies:    []string{"127.0.0.1"},
 			remoteAddr: "127.0.0.1:41234",
-			realIP:     "192.168.20.33",
+			xff:        "192.168.20.33",
 			wantCode:   http.StatusOK,
 		},
 		{
-			name:       "через доверенный прокси, чужой X-Real-IP",
+			name:       "через доверенный прокси, чужой адрес",
 			allowed:    []string{"192.168.20.33"},
 			proxies:    []string{"127.0.0.1"},
 			remoteAddr: "127.0.0.1:41234",
-			realIP:     "10.20.30.41",
+			xff:        "10.20.30.41",
+			wantCode:   http.StatusForbidden,
+		},
+		{
+			// Клиент приписал разрешённый адрес слева, nginx дописал настоящий
+			// справа. Ключ — вся цепочка, с разрешённым адресом он не совпадает.
+			name:       "подделка X-Forwarded-For через nginx",
+			allowed:    []string{"192.168.20.33"},
+			proxies:    []string{"127.0.0.1"},
+			remoteAddr: "127.0.0.1:41234",
+			xff:        "192.168.20.33, 10.20.30.41",
 			wantCode:   http.StatusForbidden,
 		},
 		{
 			// Заголовку от НЕдоверенного адреса верить нельзя: иначе любой
-			// пришлёт X-Real-IP разрешённого и заберёт метрики.
-			name:       "подделка X-Real-IP мимо прокси",
+			// пришлёт X-Forwarded-For разрешённого и заберёт метрики.
+			name:       "подделка X-Forwarded-For мимо прокси",
 			allowed:    []string{"192.168.20.33"},
 			proxies:    []string{"127.0.0.1"},
 			remoteAddr: "10.20.30.41:5555",
-			realIP:     "192.168.20.33",
+			xff:        "192.168.20.33",
 			wantCode:   http.StatusForbidden,
 		},
 		{
-			// Ловушка конфигурации: nginx проксирует, но X-Real-IP не ставит.
-			// Тогда сервис видит адрес самого прокси — и если его нет в списке,
-			// закрывается всё, включая Prometheus.
-			name:       "прокси без X-Real-IP",
+			// Ловушка конфигурации: nginx проксирует, но заголовков не ставит.
+			// Адрес не определён — и если так, закрывается всё, включая Prometheus.
+			name:       "прокси без заголовков",
 			allowed:    []string{"192.168.20.33"},
 			proxies:    []string{"127.0.0.1"},
 			remoteAddr: "127.0.0.1:41234",
@@ -99,8 +108,8 @@ func TestRequireMetricsAccess(t *testing.T) {
 
 			r := httptest.NewRequest(http.MethodGet, "/metrics", nil)
 			r.RemoteAddr = c.remoteAddr
-			if c.realIP != "" {
-				r.Header.Set("X-Real-IP", c.realIP)
+			if c.xff != "" {
+				r.Header.Set("X-Forwarded-For", c.xff)
 			}
 
 			w := httptest.NewRecorder()

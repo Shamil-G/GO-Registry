@@ -44,8 +44,15 @@ func PageContext(next http.Handler) http.Handler {
 		}
 		// slog.Debug("[PCTX]", "theme", page.Theme, "lang", page.Lang, "ip", page.IP, "path", path)
 
-		// 3. Вызываем метод нашего глобального sso.Client
-		ssoUser, err := sso.Client.CheckSession(r.Context(), page.IP)
+		// 3. Вызываем метод нашего глобального sso.Client.
+		// Пустой ключ — адрес не определён (сломан конфиг nginx, см.
+		// middleware/client_ip.go). В SSO с ним не ходим: "" был бы одним
+		// ключом на всех. Пользователь остаётся анонимом.
+		var ssoUser *sso.SSOUser
+		err := errNoClientIP
+		if page.IP != "" {
+			ssoUser, err = sso.Client.CheckSession(r.Context(), page.IP)
+		}
 		if err != nil {
 			page.IsAnonymous = true
 

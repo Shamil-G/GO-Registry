@@ -72,6 +72,14 @@ func LoginPost() http.HandlerFunc {
 
 		pageCtx := middleware.GetOrCreatePageCtx(r.Context())
 
+		// Адрес не определён (сломан конфиг nginx, см. middleware/client_ip.go):
+		// сессия с пустым ключом досталась бы всем.
+		if pageCtx.IP == "" {
+			slog.Error("Вход невозможен: адрес клиента не определён", "user", username)
+			renderLoginForm(w, r, i18n.Get(pageCtx.Lang, "NO_CLIENT_IP"))
+			return
+		}
+
 		// Вызываем метод sso.Client
 		ssoUser, err := ssoPkg.Client.Login(r.Context(), username, password, pageCtx.IP)
 		if err != nil {
@@ -124,8 +132,11 @@ func LogoutGet() http.HandlerFunc {
 		clientIP := middleware.GetIPFromContext(r.Context())
 		slog.Info("Запрос на закрытие сессии", "ip", clientIP)
 
-		if err := ssoPkg.Client.CloseSession(r.Context(), clientIP); err != nil {
-			slog.Error("Ошибка закрытия сессии в SSO", "ip", clientIP, "err", err)
+		// Пустой ключ — закрывать нечего, а "" был бы ключом на всех.
+		if clientIP != "" {
+			if err := ssoPkg.Client.CloseSession(r.Context(), clientIP); err != nil {
+				slog.Error("Ошибка закрытия сессии в SSO", "ip", clientIP, "err", err)
+			}
 		}
 
 		http.Redirect(w, r, config.Cfg.LOGIN_PAGE, http.StatusSeeOther)
