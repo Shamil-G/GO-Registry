@@ -62,7 +62,7 @@ func ListToApproveGet() http.HandlerFunc {
 						status, 
 						id
 					 FROM register r
-					 WHERE trunc(event_date,'MM') >= trunc(sysdate,'MM')-5
+					 WHERE event_date >= trunc(sysdate,'MM') - 7
 					 AND   status = 0
 					 ORDER BY event_date DESC`
 			slog.Info("Выполнен запрос LIST_APPROVE для СУПЕР-АДМИНА", "user", pageCtx.LoginName)
@@ -95,7 +95,7 @@ func ListToApproveGet() http.HandlerFunc {
 						status, 
 						id
 					  FROM register r
-					  WHERE trunc(event_date,'MM') >= trunc(sysdate,'MM')-5
+					  WHERE event_date >= trunc(sysdate,'MM') - 7
 					  AND   status = 0
 					  AND   dep_name IN (%s)
 					  ORDER BY event_date DESC`, inClause)
