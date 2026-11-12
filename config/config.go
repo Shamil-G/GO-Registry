@@ -33,6 +33,10 @@ type Config struct {
 	// Пустой список означает «всем», как было раньше; при старте про это
 	// пишется предупреждение. Подробности — web/metrics_access.go.
 	MetricsAllowedIPs []string
+	// ExportAllowedIPs — какие сервисы могут забирать JSON-выгрузку входа-выхода
+	// (EXPORT_ALLOWED_IPS). Пустой список означает «никому»: выгрузка содержит
+	// данные по сотрудникам, молча открывать её всем нельзя.
+	ExportAllowedIPs []string
 	// SecurityList — департаменты службы безопасности (SECURITY_DEPARTMENT).
 	// СБ ведёт собственный список отсутствий (/secure-time-off) и следит, кто и
 	// когда приходит на работу. Пустой список — норма и безопасный дефолт: тогда
@@ -151,6 +155,7 @@ func LoadConfig(IsProduction bool) error {
 		SecurityList:  parseCSVList(os.Getenv("SECURITY_DEPARTMENT")),
 
 		MetricsAllowedIPs: parseCSVList(os.Getenv("METRICS_ALLOWED_IPS")),
+		ExportAllowedIPs:  parseCSVList(os.Getenv("EXPORT_ALLOWED_IPS")),
 		PUBLIC_PATH:       parseCSVList(os.Getenv("PUBLIC_PATHS")),
 		PublicHosts:       parseCSVList(os.Getenv("PUBLIC_HOSTS")),
 		//
@@ -181,6 +186,11 @@ func LoadConfig(IsProduction bool) error {
 		slog.Warn("METRICS_ALLOWED_IPS не задан — /metrics доступен всем, кто может открыть портал")
 	} else {
 		slog.Info("METRICS_ALLOWED_IPS загружен", "ips", Cfg.MetricsAllowedIPs)
+	}
+	if len(Cfg.ExportAllowedIPs) == 0 {
+		slog.Warn("EXPORT_ALLOWED_IPS не задан — /all_list_off_json закрыт для всех")
+	} else {
+		slog.Info("EXPORT_ALLOWED_IPS загружен", "ips", Cfg.ExportAllowedIPs)
 	}
 	return nil
 }

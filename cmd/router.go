@@ -11,6 +11,7 @@ import (
 	mdw "gusseynov/GO-Registry/middleware"
 	ssoPkg "gusseynov/GO-Registry/sso"
 	webH "gusseynov/GO-Registry/web"
+	service "gusseynov/GO-Registry/service"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -28,6 +29,9 @@ func Router() http.Handler {
 	// Метрики — только с адресов из METRICS_ALLOWED_IPS (см. web/metrics_access.go).
 	// Пустой список в .env означает «всем», как было раньше.
 	r.With(webH.RequireMetricsAccess).Handle("/metrics", promhttp.Handler())
+	// Выгрузка входа-выхода в JSON для других сервисов: без SSO и PageContext,
+	// доступ по списку адресов EXPORT_ALLOWED_IPS (см. web/export_access.go).
+	r.With(webH.RequireExportAccess).HandleFunc("/all_list_off_json", service.ListTimeOffJson())
 	// Health
 	r.Post("/ping", ssoPkg.Alive())
 	// Статика
