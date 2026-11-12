@@ -37,6 +37,11 @@ type Config struct {
 	// (EXPORT_ALLOWED_IPS). Пустой список означает «никому»: выгрузка содержит
 	// данные по сотрудникам, молча открывать её всем нельзя.
 	ExportAllowedIPs []string
+	// BigBossVisiblePosts — должности, заявки которых видит управляющий директор
+	// (тот, у кого в SSO есть subordinate_ou) в списке на утверждение
+	// (BIG_BOSS_VISIBLE_POSTS). Сравнение по вхождению, без учёта регистра, как
+	// у Boss. Пустой список — фильтра нет, он видит всех, как раньше.
+	BigBossVisiblePosts []string
 	// SecurityList — департаменты службы безопасности (SECURITY_DEPARTMENT).
 	// СБ ведёт собственный список отсутствий (/secure-time-off) и следит, кто и
 	// когда приходит на работу. Пустой список — норма и безопасный дефолт: тогда
@@ -154,10 +159,11 @@ func LoadConfig(IsProduction bool) error {
 		HRList:        parseCSVList(os.Getenv("HR_DEPARTMENT")),
 		SecurityList:  parseCSVList(os.Getenv("SECURITY_DEPARTMENT")),
 
-		MetricsAllowedIPs: parseCSVList(os.Getenv("METRICS_ALLOWED_IPS")),
-		ExportAllowedIPs:  parseCSVList(os.Getenv("EXPORT_ALLOWED_IPS")),
-		PUBLIC_PATH:       parseCSVList(os.Getenv("PUBLIC_PATHS")),
-		PublicHosts:       parseCSVList(os.Getenv("PUBLIC_HOSTS")),
+		MetricsAllowedIPs:   parseCSVList(os.Getenv("METRICS_ALLOWED_IPS")),
+		ExportAllowedIPs:    parseCSVList(os.Getenv("EXPORT_ALLOWED_IPS")),
+		BigBossVisiblePosts: parseCSVList(os.Getenv("BIG_BOSS_VISIBLE_POSTS")),
+		PUBLIC_PATH:         parseCSVList(os.Getenv("PUBLIC_PATHS")),
+		PublicHosts:         parseCSVList(os.Getenv("PUBLIC_HOSTS")),
 		//
 		TESTER_LOGIN_NAME: getEnv("TESTER_LOGIN_NAME", "/login"),
 		TESTER_TOP_LEVEL:  topLevel,

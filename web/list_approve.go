@@ -83,6 +83,18 @@ func ListToApproveGet() http.HandlerFunc {
 			}
 			inClause := strings.Join(placeholders, ", ")
 
+			// Управляющему директору (subordinate_ou) — только заявки должностей
+			// из BIG_BOSS_VISIBLE_POSTS. Директор департамента ограничения не имеет.
+			postFilter := ""
+			if isBigBoss && len(config.Cfg.BigBossVisiblePosts) > 0 {
+				conds := make([]string, 0, len(config.Cfg.BigBossVisiblePosts))
+				for _, p := range config.Cfg.BigBossVisiblePosts {
+					queryArgs = append(queryArgs, "%"+strings.ToLower(strings.TrimSpace(p))+"%")
+					conds = append(conds, fmt.Sprintf("LOWER(post) LIKE :%d", len(queryArgs)))
+				}
+				postFilter = " AND (" + strings.Join(conds, " OR ") + ")"
+			}
+
 			query = fmt.Sprintf(`SELECT 
 						to_char(event_date, 'DD.MM.YYYY') as event_date, 
 						TO_CHAR(time_out, 'YYYY-MM-DD HH24:MI') as time_out, 
@@ -97,8 +109,8 @@ func ListToApproveGet() http.HandlerFunc {
 					  FROM register r
 					  WHERE event_date >= trunc(sysdate,'MM') - 7
 					  AND   status = 0
-					  AND   dep_name IN (%s)
-					  ORDER BY event_date DESC`, inClause)
+					  AND   dep_name IN (%s)%s
+					  ORDER BY event_date DESC`, inClause, postFilter)
 
 			err = storage.DBSelectMany(r.Context(), "list_approve", &list, query, queryArgs...)
 			slog.Info("Оригинальный SELECT выполнен для РУКОВОДИТЕЛЯ", "user", pageCtx.LoginName, "кол-во департаментов", len(targetDepartments))
