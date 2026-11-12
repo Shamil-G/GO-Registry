@@ -32,6 +32,8 @@ func Router() http.Handler {
 	// Выгрузка входа-выхода в JSON для других сервисов: без SSO и PageContext,
 	// доступ по списку адресов EXPORT_ALLOWED_IPS (см. web/export_access.go).
 	r.With(webH.RequireExportAccess).HandleFunc("/all_list_off_json", service.ListTimeOffJson())
+	// Телефонный справочник целым файлом (PDF) для других сервисов, доступ тот же.
+	r.With(webH.RequireExportAccess).Get("/phone_book", service.PhoneBookFile())
 	// Health
 	r.Post("/ping", ssoPkg.Alive())
 	// Статика
